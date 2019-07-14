@@ -62,6 +62,9 @@
                         pyim
                         dashboard
                         all-the-icons
+                        markdown-mode
+                        racket-mode
+                        rainbow-delimiters
                         ;;projectile
                         ) "Default packages")
 (setq package-selected-packages jojo/packages)
@@ -103,8 +106,10 @@
 ;;========================================================================================
 (smartparens-global-mode t)
 (sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
+(sp-local-pair 'emacs-lisp-mode "`" nil :actions nil)
 (sp-local-pair 'lisp-interaction-mode "'" nil :actions nil)
 (sp-local-pair 'org-mode "'" nil :actions nil)
+(sp-local-pair 'racket-mode "'" nil :actions nil)
 
 ;;========================================================================================
 ;;                 当是Mac OS系统的时候,开启exec-path-from-shell这个插件
@@ -156,7 +161,7 @@
 (require 'pyim-basedict) ; 拼音词库设置，五笔用户 *不需要* 此行设置
 (pyim-basedict-enable)   ; 拼音词库，五笔用户 *不需要* 此行设置
 (setq default-input-method "pyim")
-;; 我使用全拼
+;; 使用全拼
 (setq pyim-default-scheme 'quanpin)
 
 ;;========================================================================================
@@ -174,3 +179,15 @@
 ;;                               all-the-icons 相关配置
 ;;========================================================================================
 (require 'all-the-icons)
+;;========================================================================================
+;;                              markdown-mode 相关配置
+;;========================================================================================
+(autoload 'markdown-mode "markdown-mode"
+   "Major mode for editing Markdown files" t)
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+
+(autoload 'gfm-mode "markdown-mode"
+   "Major mode for editing GitHub Flavored Markdown files" t)
+(add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)

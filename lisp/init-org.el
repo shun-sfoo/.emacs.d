@@ -1,5 +1,9 @@
 (provide 'init-org)
 
+;; 打开 org-indent mode
+(setq org-startup-indented t)
+;; 设置 bullet list
+(setq org-bullets-bullet-list '("☰" "☷" "☯" "☭"))
 ;; Org 模式相关设定
 (with-eval-after-load 'org
   ;; 让Org-mode中#+BEGIN_SRC块语法高亮
