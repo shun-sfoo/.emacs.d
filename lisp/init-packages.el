@@ -28,38 +28,41 @@
 
 ;; 列表中定义的插件,如果没安装则自动安装
 (defvar jojo/packages '(
-                          doom-themes
-                          auto-yasnippet
-                          company
-                          ;;company-anaconda
-                          counsel
-                          evil
-                          evil-leader
-                          evil-nerd-commenter
-                          evil-surround
-                          exec-path-from-shell
-                          expand-region
-			  flycheck
-                          ;;htmlize
-                          hungry-delete
-                          iedit
-                          ;;js2-mode
-                          org-bullets
-                          org-pomodoro
-                          popwin
-                          ;;py-autopep8
-                          ;;reveal-in-osx-finder
-                          smartparens
-                          swiper
-                          ;;web-mode
-                          which-key
-                          window-numbering
-                          yasnippet
-                          youdao-dictionary
-                          ;;magit
-                          ;;emmet-mode
-                          company-quickhelp
-                          ) "Default packages")
+                        doom-themes
+                        auto-yasnippet
+                        company
+                        ;;company-anaconda
+                        counsel
+                        evil
+                        evil-leader
+                        evil-nerd-commenter
+                        evil-surround
+                        exec-path-from-shell
+                        expand-region
+                        flycheck
+                        ;;htmlize
+                        hungry-delete
+                        iedit
+                        ;;js2-mode
+                        org-bullets
+                        org-pomodoro
+                        popwin
+                        ;;py-autopep8
+                        ;;reveal-in-osx-finder
+                        smartparens
+                        swiper
+                        ;;web-mode
+                        which-key
+                        window-numbering
+                        yasnippet
+                        youdao-dictionary
+                        ;;magit
+                        ;;emmet-mode
+                        company-quickhelp
+                        pyim
+                        dashboard
+                        all-the-icons
+                        ) "Default packages")
 (setq package-selected-packages jojo/packages)
 (defun jojo/packages-installed-p ()
   (loop for pkg in jojo/packages
@@ -143,3 +146,30 @@
 ;;=========================================================================================
 ;;   如果是MAC OSX 系统,想要在finder中打开当前文件,直接输入M-x reveal-in-osx-finder即可
 ;;=========================================================================================
+
+
+;;========================================================================================
+;;                               pyim 相关配置
+;;========================================================================================
+(require 'pyim)
+(require 'pyim-basedict) ; 拼音词库设置，五笔用户 *不需要* 此行设置
+(pyim-basedict-enable)   ; 拼音词库，五笔用户 *不需要* 此行设置
+(setq default-input-method "pyim")
+;; 我使用全拼
+(setq pyim-default-scheme 'quanpin)
+
+;;========================================================================================
+;;                               dashboard 相关配置
+;;========================================================================================
+(require 'dashboard)
+(dashboard-setup-startup-hook)
+(setq dashboard-set-heading-icons t)
+(setq dashboard-set-file-icons t)
+(setq dashboard-startup-banner "~/.emacs.d/emacs-china-log.png")
+(setq dashboard-image-banner-max-height 256)
+(setq dashboard-image-banner-max-height 256)
+(setq dashboard-banner-logo-title "克己,守心")
+;;========================================================================================
+;;                               all-the-icons 相关配置
+;;========================================================================================
+(require 'all-the-icons)

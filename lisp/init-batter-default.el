@@ -17,8 +17,8 @@
 
 ;; 高亮显示选中的区域
 (transient-mark-mode t)
-(set-face-background 'region "#8DEEEE")
-(set-face-foreground 'region "#000000")
+;;(set-face-background 'region "#8DEEEE")
+;;(set-face-foreground 'region "#000000")
 
 ;; 禁止生成~备份文件
 (setq make-backup-files nil)
@@ -51,7 +51,7 @@
 
 ;; 设置TAB的默认宽度
 (setq default-tab-width 4)
-(setq python-indent-guess-indent-offset nil)
+;;(setq python-indent-guess-indent-offset nil)
 (setq-default indent-tabs-mode nil);
 
 ;; 在状态条显示当前光标在哪个函数体内部
@@ -97,7 +97,7 @@
 ;; 设置别名,当输入wjl按空格,自动替换成wangjl,输入wjl/时自动替换为wangjl/
 (setq-default abbrev-mode t)
 (define-abbrev-table 'global-abbrev-table '(
-                                            ("wjl" "Wangjl")
+                                            ("ly" "liuyang")
                                             ))
 
 ;;=========================================================================================
