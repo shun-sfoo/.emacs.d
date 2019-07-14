@@ -62,6 +62,7 @@
                         pyim
                         dashboard
                         all-the-icons
+                        ;;projectile
                         ) "Default packages")
 (setq package-selected-packages jojo/packages)
 (defun jojo/packages-installed-p ()
@@ -165,7 +166,7 @@
 (dashboard-setup-startup-hook)
 (setq dashboard-set-heading-icons t)
 (setq dashboard-set-file-icons t)
-(setq dashboard-startup-banner "~/.emacs.d/emacs-china-log.png")
+(setq dashboard-startup-banner "~/.emacs.d/emacs-china-logo.png")
 (setq dashboard-image-banner-max-height 256)
 (setq dashboard-image-banner-max-height 256)
 (setq dashboard-banner-logo-title "克己,守心")
