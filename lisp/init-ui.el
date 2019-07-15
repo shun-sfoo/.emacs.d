@@ -4,8 +4,15 @@
 ;;                        GUI模式下才有用,非GUI模式不要开启,会报错
 ;;========================================================================================
 
-(set-face-attribute 'default nil :font "Monaco" :height 110)
-(set-fontset-font t 'han "Noto Sans CJK SC")
+(when (memq window-system '(x))
+  (progn
+    (set-face-attribute 'default nil :font "Monaco" :height 110)
+    (set-fontset-font t 'han "Noto Sancs CJK SC")))
+
+(when (memq window-system '(w32))
+  (progn
+    (set-face-attribute 'default nil :font "Noto Mono" :height 110)
+    (set-fontset-font t 'han "微软雅黑")))
 
 ;; 设置背景色
 ;; (set-background-color "black")

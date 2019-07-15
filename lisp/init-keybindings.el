@@ -132,3 +132,13 @@
 (global-set-key (kbd "M-/") 'company-complete)                   ;;company-mode 补全快捷键
 (global-set-key (kbd "C-a") 'er/expand-region)                   ;;快速区域选择
 (global-set-key (kbd "C-c C-c") 'eshell)                         ;;打开eshell
+
+;;========================================================================================
+;;                                  company bindings
+;;========================================================================================
+(with-eval-after-load 'company
+  (define-key company-active-map (kbd "M-n") nil)
+  (define-key company-active-map (kbd "M-p") nil)
+  (define-key company-active-map (kbd "C-n") #'company-select-next)
+  (define-key company-active-map (kbd "C-p") #'company-select-previous))
+

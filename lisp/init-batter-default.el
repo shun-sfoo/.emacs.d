@@ -58,7 +58,7 @@
 ;; (which-function-mode t)
 
 ;; 在 mode line 上显示时间,格式: 年-月-日 时:分
-(setq display-time-format "%Y-%m-%d %H:%M")
+(setq display-time-format "%H:%M")
 (setq display-time-default-load-average nil)
 (display-time-mode 1)
 

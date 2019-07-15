@@ -65,6 +65,7 @@
                         markdown-mode
                         racket-mode
                         rainbow-delimiters
+                        doom-modeline
                         ;;projectile
                         ) "Default packages")
 (setq package-selected-packages jojo/packages)
@@ -171,10 +172,14 @@
 (dashboard-setup-startup-hook)
 (setq dashboard-set-heading-icons t)
 (setq dashboard-set-file-icons t)
-(setq dashboard-startup-banner "~/.emacs.d/emacs-china-logo.png")
-(setq dashboard-image-banner-max-height 256)
-(setq dashboard-image-banner-max-height 256)
-(setq dashboard-banner-logo-title "克己,守心")
+
+(when (memq window-system '(x))
+  (progn
+    (setq dashboard-startup-banner "~/.emacs.d/emacs-china-logo.png")
+    (setq dashboard-image-banner-max-height 256)
+    (setq dashboard-image-banner-max-height 256)
+    (setq dashboard-banner-logo-title "克己,守心")
+    ))
 ;;========================================================================================
 ;;                               all-the-icons 相关配置
 ;;========================================================================================
@@ -183,11 +188,17 @@
 ;;                              markdown-mode 相关配置
 ;;========================================================================================
 (autoload 'markdown-mode "markdown-mode"
-   "Major mode for editing Markdown files" t)
+  "Major mode for editing Markdown files" t)
 (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
 
 (autoload 'gfm-mode "markdown-mode"
-   "Major mode for editing GitHub Flavored Markdown files" t)
+  "Major mode for editing GitHub Flavored Markdown files" t)
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+;;========================================================================================
+;;                              doom-modeline 相关配置
+;;========================================================================================
+
+(require 'doom-modeline)
+(doom-modeline-mode 1)
