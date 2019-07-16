@@ -31,7 +31,7 @@
 
 ;; 设置光标的样式为竖线
 (setq-default cursor-type 'bar)
-(global-prettify-symbols-mode 1)
+;; (global-prettify-symbols-mode 1)
 (defun my-add-pretty-lambda ()
   "make some word or string show as pretty Unicode symbols"
   (setq prettify-symbols-alist
