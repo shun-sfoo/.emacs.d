@@ -42,7 +42,7 @@
   ;;b 键(prefix)前缀 关于缓冲区(Buffer)的操作
   ;;==============================================================  
 
-  "bb"  'helm-buffers-list            ;;打开buffer列表
+  ;; "bb"  'helm-buffers-list            ;;打开buffer列表
   "bs"  'switch-to-buffer             ;;切换buffer
   "bk"  'kill-buffer                  ;;关闭buffer
 

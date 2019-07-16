@@ -31,4 +31,24 @@
 
 ;; 设置光标的样式为竖线
 (setq-default cursor-type 'bar)
+(global-prettify-symbols-mode 1)
+(defun my-add-pretty-lambda ()
+  "make some word or string show as pretty Unicode symbols"
+  (setq prettify-symbols-alist
+        '(
+          ("lambda" . 955) ; λ
+          ("->" . 8594)    ; →
+          ("=>" . 8658)    ; ⇒
+          ("map" . 8614)   ; ↦
+          )))
 
+(add-hook 'prog-mode-hook 'my-add-pretty-lambda)
+
+;; Use a hook so the message doesn't get clobbered by other messages.
+(add-hook 'emacs-startup-hook
+    (lambda ()
+        (message "Emacs ready in %s with %d garbage collections."
+            (format "%.2f seconds"
+                (float-time
+                    (time-subtract after-init-time before-init-time)))
+        gcs-done)))

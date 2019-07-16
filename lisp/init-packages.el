@@ -19,11 +19,21 @@
 
 ;; 配置elpa和melpa源
 (when (>= emacs-major-version 24)
-  ;; 稳定版仓库
+  ;; emacs-china 源
   (add-to-list 'package-archives '("gnu-elpa-china" . "https://elpa.emacs-china.org/gnu/") t)
-  ;; (add-to-list 'package-archives '("melpa-stable-china" . "https://elpa.emacs-china.org/melpa-stable/") t)
-  ;; 最新版仓库
   (add-to-list 'package-archives '("melpa-china" . "https://elpa.emacs-china.org/melpa/") t)
+  ;; 清华源
+  (add-to-list 'package-archives '("melpa-cn" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/") t)
+  (add-to-list 'package-archives '("org-cn" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/") t)
+  (add-to-list 'package-archives '("gnu-cn" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/") t)
+  ;; 鹅厂
+  (add-to-list 'package-archives '("melpa-qq" . "http://mirrors.cloud.tencent.com/elpa/melpa/") t)
+  (add-to-list 'package-archives '("org-qq" . "http://mirrors.cloud.tencent.com/elpa/org/") t)
+  (add-to-list 'package-archives '("gnu-qq" . "http://mirrors.cloud.tencent.com/elpa/gnu/") t)
+  ;; 网易源 
+  (add-to-list 'package-archives '("melpa-163" . "http://mirrors.163.com/elpa/melpa/") t)
+  (add-to-list 'package-archives '("org-163" . "http://mirrors.163.com/elpa/org/") t)
+  (add-to-list 'package-archives '("gnu-163" . "http://mirrors.163.com/elpa/gnu/") t)
   )
 
 ;; 列表中定义的插件,如果没安装则自动安装
@@ -110,7 +120,6 @@
 (sp-local-pair 'emacs-lisp-mode "`" nil :actions nil)
 (sp-local-pair 'lisp-interaction-mode "'" nil :actions nil)
 (sp-local-pair 'org-mode "'" nil :actions nil)
-(sp-local-pair 'racket-mode "'" nil :actions nil)
 
 ;;========================================================================================
 ;;                 当是Mac OS系统的时候,开启exec-path-from-shell这个插件
@@ -156,22 +165,16 @@
 
 
 ;;========================================================================================
-;;                               pyim 相关配置
-;;========================================================================================
-(require 'pyim)
-(require 'pyim-basedict) ; 拼音词库设置，五笔用户 *不需要* 此行设置
-(pyim-basedict-enable)   ; 拼音词库，五笔用户 *不需要* 此行设置
-(setq default-input-method "pyim")
-;; 使用全拼
-(setq pyim-default-scheme 'quanpin)
-
-;;========================================================================================
 ;;                               dashboard 相关配置
 ;;========================================================================================
 (require 'dashboard)
 (dashboard-setup-startup-hook)
 (setq dashboard-set-heading-icons t)
 (setq dashboard-set-file-icons t)
+(setq dashboard-center-content t)
+
+(when (memq window-system '(w32))
+  (setq dashboard-startup-banner 3))
 
 (when (memq window-system '(x))
   (progn
@@ -197,8 +200,7 @@
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 ;;========================================================================================
-;;                              doom-modeline 相关配置
+;;                              doom-modeline 相关配置 
 ;;========================================================================================
-
 (require 'doom-modeline)
 (doom-modeline-mode 1)
