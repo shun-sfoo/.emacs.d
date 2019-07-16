@@ -24,3 +24,5 @@
 
 ; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
+;; 设置环境为UTF-8编码
+(set-language-environment "UTF-8")
