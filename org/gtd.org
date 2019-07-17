@@ -1,4 +1,0 @@
-* 时间管理
-
-** TODO [#B] learn yast
-
