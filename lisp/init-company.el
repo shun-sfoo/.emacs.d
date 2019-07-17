@@ -14,3 +14,6 @@
 ;; 解决删除一个字符后补全提示就没有了的问题
 (add-to-list 'company-begin-commands  'backward-delete-char-untabify)
 (add-to-list 'company-begin-commands  'backward-kill-word)
+
+;; Number the candidates (use M-1, M-2 etc to select completions).
+;; (setq company-show-numbers t)

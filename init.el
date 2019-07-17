@@ -1,12 +1,15 @@
 ;; Make startup faster by reducing the frequency of garbage
 ;; collection.  The default is 800 kilobytes.  Measured in bytes.
-(setq gc-cons-threshold (* 50 1000 1000))
+;; 设置环境为UTF-8编码
+(set-language-environment "UTF-8")
 
+(setq gc-cons-threshold (* 50 1000 1000))
 (package-initialize)
 ;;========================================================================================
 ;;                                   配置文件模块化配置
 ;;========================================================================================
 (add-to-list 'load-path "~/.emacs.d/lisp/")
+
 (require 'init-ui)
 (require 'init-batter-default)
 (require 'init-packages)
@@ -24,5 +27,3 @@
 
 ; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
-;; 设置环境为UTF-8编码
-(set-language-environment "UTF-8")

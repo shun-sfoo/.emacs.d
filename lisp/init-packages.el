@@ -76,6 +76,7 @@
                         racket-mode
                         rainbow-delimiters
                         doom-modeline
+                        ;;company-tabnine
                         ;;projectile
                         ) "Default packages")
 (setq package-selected-packages jojo/packages)
