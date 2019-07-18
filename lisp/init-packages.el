@@ -76,6 +76,8 @@
                         racket-mode
                         rainbow-delimiters
                         doom-modeline
+                        diredfl ;;colorful dired mode
+                        all-the-icons-dired
                         ;;company-tabnine
                         ;;projectile
                         ) "Default packages")
@@ -205,3 +207,6 @@
 ;;========================================================================================
 (require 'doom-modeline)
 (doom-modeline-mode 1)
+
+(add-hook 'dired-mode-hook 'diredfl-mode)
+(add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
