@@ -176,16 +176,8 @@
 (setq dashboard-set-file-icons t)
 (setq dashboard-center-content t)
 
-(when (memq window-system '(w32))
-  (setq dashboard-startup-banner 3))
+(setq dashboard-startup-banner 3)
 
-(when (memq window-system '(x))
-  (progn
-    (setq dashboard-startup-banner "~/.emacs.d/emacs-china-logo.png")
-    (setq dashboard-image-banner-max-height 256)
-    (setq dashboard-image-banner-max-height 256)
-    (setq dashboard-banner-logo-title "克己,守心")
-    ))
 ;;========================================================================================
 ;;                               all-the-icons 相关配置
 ;;========================================================================================

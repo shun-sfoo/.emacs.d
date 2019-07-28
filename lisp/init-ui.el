@@ -6,7 +6,7 @@
 
 (when (memq window-system '(x))
   (progn
-    (set-face-attribute 'default nil :font "Monaco" :height 110)
+    (set-face-attribute 'default nil :font "Monaco" :height 130)
     (set-fontset-font t 'han "Noto Sancs CJK SC")))
 
 (when (memq window-system '(w32))
