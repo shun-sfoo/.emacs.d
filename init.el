@@ -73,7 +73,7 @@
 
 (use-package emacs
   :init
-  (setq custom-file (expand-file-name "init-customize-groups.el" user-emacs-directory)
+  (setq custom-file (expand-file-name "init-customize-groups.el" user-emacs-directory))
   (load-file custom-file)
   :config
   (tool-bar-mode -1)

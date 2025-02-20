@@ -9,3 +9,7 @@ pyim/
 eshell/
 bookmarks
 url/
+eln-cache/
+history
+init-customize-groups.el
+transient/
