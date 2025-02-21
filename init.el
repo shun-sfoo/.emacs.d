@@ -2,10 +2,10 @@
 (use-package package
   :config
   (setq package-archives
-                '(("gnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-                  ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
-	          ("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/stable-melpa/")
-	          ("melpa"  . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+	'(("gnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+          ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
+	  ("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/stable-melpa/")
+	  ("melpa"  . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
   :config
   (unless package-archive-contents
     (package-refresh-contents)))
@@ -23,15 +23,16 @@
                      "/TAGS\\'"
                      "COMMIT_EDITMSG\\'")))
 (use-package plz
-  :ensure t
-  )
+  :ensure t)
+
+(use-package magit
+  :ensure t)
 
 (use-package go-translate
   :ensure t
   :config
   (setq gt-langs '(en zh))
-  (setq gt-default-translator (gt-translator :engines (gt-youdao-dict-engine)))
-  )
+  (setq gt-default-translator (gt-translator :engines (gt-youdao-dict-engine))))
 
 (use-package repeat
   :ensure nil
@@ -49,8 +50,8 @@
   :custom
   (org-roam-directory "~/roam-notes/")
   (org-roam-dailies-directory "daily/")
-  (rog-roam-db-gc-threshold most-positive-fixnum)
-  (required 'org-roam-dailies)
+  (org-roam-db-gc-threshold most-positive-fixnum)
+  (require 'org-roam-dailies)
   (org-roam-db-autosync-mode))
 
 (use-package org-roam-ui
@@ -64,12 +65,7 @@
 (use-package rime
   :ensure t
   :custom
-  (default-input-method "rime")
-)
-
-(use-package god-mode
-  :ensure t
-  :bind (("<escape>" . god-local-mode)))
+  (default-input-method "rime"))
 
 (use-package emacs
   :init
@@ -80,15 +76,18 @@
   (menu-bar-mode -1)
   (blink-cursor-mode -1)
   (global-hl-line-mode 1)
-  ;;(icomplete-vertical-mode 1)
+  (global-display-line-numbers-mode 1)
   (pixel-scroll-precision-mode 1)
-  (set-face-attribute 'default nil :font "Fira Code" :height 130)
-  ;; 设定customize-group自动设置的变量的值存放到哪个文件中
-
+  ;; --- Typography stack -------------------------------------------------------
+  (set-face-attribute 'default nil
+                      :height 110 :weight 'light :family "Operator Mono SSm Lig")
+  (set-face-attribute 'bold nil :weight 'regular)
+  (set-face-attribute 'bold-italic nil :weight 'regular)
+  (set-display-table-slot standard-display-table 'truncation (make-glyph-code ?…))
+  (set-display-table-slot standard-display-table 'wrap (make-glyph-code ?–))
   :custom
   ;; TAB cycle if there are only few candidates
   ;; (completion-cycle-threshold 3)
-
   ;; Enable indentation+completion using the TAB key.
   ;; `completion-at-point' is often bound to M-TAB.
   (tab-always-indent 'complete)
@@ -102,7 +101,7 @@
   ;; useful beyond Corfu.
   (read-extended-command-predicate #'command-completion-default-include-p)
   :custom
-    ;; Support opening new minibuffers from inside existing minibuffers.
+  ;; Support opening new minibuffers from inside existing minibuffers.
   (enable-recursive-minibuffers t)
   ;; Hide commands in M-x which do not work in the current mode.  Vertico
   ;; commands are hidden in normal buffers. This setting is useful beyond
@@ -115,7 +114,7 @@
 (use-package corfu
   :ensure t
   ;; Optional customizations
-  ;; :custom
+  ;;:custom
   ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
   ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
@@ -132,6 +131,9 @@
   ;; be used globally (M-/).  See also the customization variable
   ;; `global-corfu-modes' to exclude certain modes.
   :init
+  (setq corfu-auto t
+	corfu-auto-prefix 1
+	corfu-quit-no-match 'separator)
   (global-corfu-mode))
 
 ;; Optionally use the `orderless' completion style.
@@ -261,4 +263,4 @@
   ;; Optionally make narrowing help available in the minibuffer.
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
   ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
-)
+  )
