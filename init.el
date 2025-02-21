@@ -42,8 +42,7 @@
 
 (use-package spacemacs-theme
   :ensure t
-  :config
-  (load-theme 'spacemacs-light t))
+  :hook (after-init . (lambda () (load-theme 'spacemacs-light t))))
 
 (use-package org-roam
   :ensure t
@@ -56,7 +55,7 @@
 
 (use-package org-roam-ui
   :ensure t
-  :after org-roam  
+  :after org-roam
   :custom
   (org-roam-ui-sync-theme t) ;; 同步 Emacs 主题
   (org-roam-ui-follow t) ;; 笔记节点跟随
@@ -85,6 +84,8 @@
   (set-face-attribute 'bold-italic nil :weight 'regular)
   (set-display-table-slot standard-display-table 'truncation (make-glyph-code ?…))
   (set-display-table-slot standard-display-table 'wrap (make-glyph-code ?–))
+  :hook
+  (prog-mode . electric-pair-mode)
   :custom
   ;; TAB cycle if there are only few candidates
   ;; (completion-cycle-threshold 3)
