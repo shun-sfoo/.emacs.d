@@ -3,24 +3,49 @@
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (require 'init-benchmarking) ;; Measure startup time
 
+(setq custom-file (locate-user-emacs-file "custom.el"))
+
+;; Variables configured via the interactive 'customize' interface
+(when (file-exists-p custom-file)
+  (load custom-file))
+
 ;; 定义常量控制拼写检查
 (defconst *spell-check-support-enabled* nil)  ;; 默认禁用
+(defconst *is-a-mac* (eq system-type 'darwin))
 
-;; 关闭工具栏，tool-bar-mode 即为一个 Minor Mode
-(tool-bar-mode -1)
-(menu-bar-mode -1)
+;; Adjust garbage collection threshold for early startup (see use of gcmh below)
+(setq gc-cons-threshold (* 128 1024 1024))
 
-;; 关闭文件滑动控件
-(scroll-bar-mode -1)
-
-;; 显示行号
-(global-display-line-numbers-mode 1)
-(global-hl-line-mode 1)
+;; Process performance tuning
+(setq read-process-output-max (* 4 1024 1024))
+(setq process-adaptive-read-buffering nil)
 
 
-(icomplete-mode 1)
-(icomplete-vertical-mode 1)
+(defun pulse-line (&rest _)
+  "Pulse the current line."
+  (interactive)
+      (pulse-momentary-highlight-one-line (point)))
 
+;; (advice-add 'kill-ring-save :after #'pulse-line)
+
+(add-hook 'after-init-hook (lambda ()
+			     (global-display-line-numbers-mode 1)
+			     (global-hl-line-mode 1)
+			     (global-auto-revert-mode 1)
+			     (which-key-mode)
+			     (icomplete-mode 1)
+			     (icomplete-vertical-mode 1)
+			     ))
+
+(add-hook 'prog-mode-hook (lambda ()
+			    (prettify-symbols-mode)
+			    (electric-pair-mode)
+			    ))
+
+(add-hook 'find-file-hook
+          (lambda ()
+            (when (string-match-p "/\\.git/" (buffer-file-name))
+              (setq-local make-backup-files nil))))
 ;; 快速打开配置文件
 (defun open-init-file()
   (interactive)
@@ -38,9 +63,5 @@
 (set-face-attribute 'bold-italic nil :weight 'regular)
 (set-display-table-slot standard-display-table 'truncation (make-glyph-code ?…))
 (set-display-table-slot standard-display-table 'wrap (make-glyph-code ?–))
-
-(global-auto-revert-mode 1)
-(prettify-symbols-mode 1)
-(electric-pair-mode 1)
 
 (provide 'init)

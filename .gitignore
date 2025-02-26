@@ -11,6 +11,6 @@ bookmarks
 url/
 eln-cache/
 history
-init-customize-groups.el
 transient/
-init-customize-groups.el~
+elpa-30.1/
+custom.el
