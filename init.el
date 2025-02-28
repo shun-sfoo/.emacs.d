@@ -35,6 +35,8 @@
 			     (which-key-mode)
 			     (icomplete-mode 1)
 			     (icomplete-vertical-mode 1)
+			     (global-completion-preview-mode 1)
+			     (pixel-scroll-mode 1)
 			     ))
 
 (add-hook 'prog-mode-hook (lambda ()
@@ -54,7 +56,8 @@
 ;; 这一行代码，将函数 open-init-file 绑定到 <f2> 键上
 (global-set-key (kbd "<f2>") 'open-init-file)
 
-(load-theme 'modus-operandi t)
+(add-hook 'emacs-startup-hook (lambda ()
+				(load-theme 'modus-operandi-tinted)))
 
 ;; --- Typography stack -------------------------------------------------------
 (set-face-attribute 'default nil
