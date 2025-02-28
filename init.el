@@ -20,6 +20,7 @@
 (setq read-process-output-max (* 4 1024 1024))
 (setq process-adaptive-read-buffering nil)
 
+;;(require 'init-utils)
 
 (defun pulse-line (&rest _)
   "Pulse the current line."
@@ -48,6 +49,7 @@
           (lambda ()
             (when (string-match-p "/\\.git/" (buffer-file-name))
               (setq-local make-backup-files nil))))
+
 ;; 快速打开配置文件
 (defun open-init-file()
   (interactive)
@@ -60,10 +62,16 @@
 				(load-theme 'modus-operandi-tinted)))
 
 ;; --- Typography stack -------------------------------------------------------
+;;(add-to-list 'default-frame-alist '(font . "LXGW WenKai Mono-13"))
 (set-face-attribute 'default nil
                     :height 110 :weight 'light :family "Operator Mono SSm Lig")
 (set-face-attribute 'bold nil :weight 'regular)
 (set-face-attribute 'bold-italic nil :weight 'regular)
+
+(dolist (charset '(kana han symbol cjk-misc bopomofo))
+  (set-fontset-font (frame-parameter nil 'font) charset
+                   (font-spec :family "LXGW WenKai Mono" :size 16)))
+
 (set-display-table-slot standard-display-table 'truncation (make-glyph-code ?…))
 (set-display-table-slot standard-display-table 'wrap (make-glyph-code ?–))
 
