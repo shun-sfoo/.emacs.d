@@ -14,3 +14,6 @@ history
 transient/
 elpa-30.1/
 custom.el
+tutorial/
+*~
+tramp

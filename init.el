@@ -1,7 +1,11 @@
 ;;; init.el --- Load the full configuration -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (require 'init-benchmarking) ;; Measure startup time
+(require 'init-utils)
+(require 'init-site-lisp)
 
 (setq custom-file (locate-user-emacs-file "custom.el"))
 
@@ -29,6 +33,8 @@
 
 ;; (advice-add 'kill-ring-save :after #'pulse-line)
 
+(setq flymake-show-diagnostics-at-end-of-line 'short)
+
 (add-hook 'after-init-hook (lambda ()
 			     (global-display-line-numbers-mode 1)
 			     (global-hl-line-mode 1)
@@ -38,11 +44,13 @@
 			     (icomplete-vertical-mode 1)
 			     (global-completion-preview-mode 1)
 			     (pixel-scroll-mode 1)
+			     (pixel-scroll-precision-mode 1)
 			     ))
 
 (add-hook 'prog-mode-hook (lambda ()
 			    (prettify-symbols-mode)
 			    (electric-pair-mode)
+			    (flymake-mode 1)
 			    ))
 
 (add-hook 'find-file-hook
@@ -52,6 +60,7 @@
 
 ;; 快速打开配置文件
 (defun open-init-file()
+  "Open init file."
   (interactive)
   (find-file "~/.emacs.d/init.el"))
 
@@ -76,3 +85,4 @@
 (set-display-table-slot standard-display-table 'wrap (make-glyph-code ?–))
 
 (provide 'init)
+;;; init.el ends here
