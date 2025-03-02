@@ -6,6 +6,10 @@
 
 (require 'cl-lib)
 
+(let ((site-file-dir (expand-file-name "site-lisp/" user-emacs-directory)))
+  (unless (file-exists-p site-file-dir)
+    (make-directory site-file-dir t)))
+
 (defun sanityinc/add-subdirs-to-load-path (parent-dir)
   "Add every non-hidden subdir of PARENT-DIR to `load-path'."
   (let ((default-directory parent-dir))
