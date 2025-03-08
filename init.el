@@ -2,6 +2,8 @@
 ;;; Commentary:
 ;;; Code:
 
+(require 'cl-lib)
+
 (defconst *installed_package-enable* nil)
 (defconst *is-a-mac* (eq system-type 'darwin))
 (setq custom-file (locate-user-emacs-file "custom.el"))
@@ -33,7 +35,6 @@
 			     (which-key-mode)
 			     (icomplete-mode 1)
 			     (icomplete-vertical-mode 1)
-			     (global-completion-preview-mode 1)
 			     (fido-vertical-mode 1)
 			     (pixel-scroll-precision-mode 1)
 			     (recentf-mode 1)
@@ -49,6 +50,15 @@
 			    (flymake-mode 1)
 			    ))
 
+
+(if (< emacs-major-version 30)
+    (add-hook 'emacs-startup-hook (lambda ()
+				    (load-theme 'modus-operandi)))
+  (progn
+    (add-hook 'after-init-hook #'global-completion-preview-mode)
+    (add-hook 'emacs-startup-hook (lambda ()
+				    (load-theme 'modus-operandi-tinted)))))
+
 (defun open-init-file()
   "Open init file."
   (interactive)
@@ -57,17 +67,56 @@
 ;; 这一行代码，将函数 open-init-file 绑定到 <f2> 键上
 (global-set-key (kbd "<f2>") 'open-init-file)
 
-(add-hook 'emacs-startup-hook (lambda ()
-				(load-theme 'modus-operandi-tinted)))
 
-(set-face-attribute 'default nil
-                    :height 110 :weight 'light :family "Operator Mono SSm Lig")
-(set-face-attribute 'bold nil :weight 'regular)
-(set-face-attribute 'bold-italic nil :weight 'regular)
+(defconst sys/macp
+  (eq system-type 'darwin)
+  "Are we running on a Mac system?")
 
-(dolist (charset '(kana han symbol cjk-misc bopomofo))
-  (set-fontset-font (frame-parameter nil 'font) charset
-                    (font-spec :family "LXGW WenKai Mono" :size 16)))
+(defconst sys/win32p
+  (eq system-type 'windows-nt)
+  "Are we running on a WinTel system?")
+
+(defconst sys/linuxp
+  (eq system-type 'gnu/linux)
+  "Are we running on a GNU/Linux system?")
+
+;; Font
+(defun font-installed-p (font-name)
+  "Check if font with FONT-NAME is available."
+  (find-font (font-spec :name font-name)))
+
+(defun centaur-setup-fonts ()
+  "Setup fonts."
+  (when (display-graphic-p)
+    ;; Set default font
+    (cl-loop for font in '("Operator Mono SSm Lig" "Fira Code" "Consolas")
+             when (font-installed-p font)
+             return (set-face-attribute 'default nil
+                                        :family font
+					:weight 'light
+                                        :height (cond (sys/macp 130)
+                                                      (sys/win32p 110)
+                                                      (t 110))))
+    ;; Specify font for all unicode characters
+    (cl-loop for font in '("Apple Symbols" "Segoe UI Symbol" "Symbola" "Symbol")
+             when (font-installed-p font)
+             return (set-fontset-font t 'symbol (font-spec :family font) nil 'prepend))
+
+    ;; Emoji
+    (cl-loop for font in '("Noto Color Emoji" "Apple Color Emoji" "Segoe UI Emoji")
+             when (font-installed-p font)
+             return (set-fontset-font t
+                                      (if (< emacs-major-version 28)'symbol 'emoji)
+                                      (font-spec :family font) nil 'prepend))
+
+    ;; Specify font for Chinese characters
+    (cl-loop for font in '("LXGW WenKai Mono Screen" "WenQuanYi Micro Hei Mono" "PingFang SC" "Microsoft Yahei UI" "Simhei")
+             when (font-installed-p font)
+             return (progn
+                      (setq face-font-rescale-alist `((,font . 1.2)))
+                      (set-fontset-font t 'han (font-spec :family font))))))
+
+(centaur-setup-fonts)
 
 ;; set key
 (global-set-key (kbd "M-u") 'upcase-dwim)
