@@ -2,7 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 
-(require 'cl-lib)
+(eval-after-load 'cl-lib nil)
 
 (defconst *installed_package-enable* nil)
 (defconst *is-a-mac* (eq system-type 'darwin))
@@ -20,24 +20,28 @@
   (advice-add command :after #'pulse-line))
 
 (defun pulse-region (start end &rest _)
-  "Pulse region."
+  "Pulse START to END region."
   (pulse-momentary-highlight-region start end))
 (advice-add 'kill-ring-save :after #'pulse-region)
 
-(setq flymake-show-diagnostics-at-end-of-line 'short)
+
 (setq isearch-lazy-count t)
 (setq make-backup-files nil)
+(setq flymake-show-diagnostics-at-end-of-line 'short)
 
 (add-hook 'after-init-hook (lambda ()
 			     (global-display-line-numbers-mode 1)
 			     (global-hl-line-mode 1)
 			     (global-auto-revert-mode 1)
-			     (which-key-mode)
 			     (icomplete-mode 1)
 			     (icomplete-vertical-mode 1)
 			     (fido-vertical-mode 1)
 			     (pixel-scroll-precision-mode 1)
 			     (recentf-mode 1)
+			     (when (fboundp 'global-completion-preview-mode)
+			       (global-completion-preview-mode))
+			     (when (fboundp 'which-key-mode)
+			       (which-key-mode))
 			     (savehist-mode 1)
 			     (delete-selection-mode 1)
 			     (save-place-mode 1)
@@ -50,14 +54,10 @@
 			    (flymake-mode 1)
 			    ))
 
-
-(if (< emacs-major-version 30)
-    (add-hook 'emacs-startup-hook (lambda ()
-				    (load-theme 'modus-operandi)))
-  (progn
-    (add-hook 'after-init-hook #'global-completion-preview-mode)
-    (add-hook 'emacs-startup-hook (lambda ()
-				    (load-theme 'modus-operandi-tinted)))))
+(add-hook 'emacs-startup-hook (lambda ()
+				(if (< emacs-major-version 30)
+				    (load-theme 'modus-operandi)
+				  (load-theme 'modus-operandi-tinted))))
 
 (defun open-init-file()
   "Open init file."
@@ -116,7 +116,11 @@
                       (setq face-font-rescale-alist `((,font . 1.2)))
                       (set-fontset-font t 'han (font-spec :family font))))))
 
-(centaur-setup-fonts)
+
+(add-hook 'window-setup-hook
+	  (lambda ()
+	    (when (display-graphic-p)
+	      (centaur-setup-fonts))))
 
 ;; set key
 (global-set-key (kbd "M-u") 'upcase-dwim)
