@@ -83,10 +83,10 @@
                                     (if (< emacs-major-version 28)'symbol 'emoji)
                                     (font-spec :family font) nil 'prepend))
   ;; Specify font for Chinese characters
-  (cl-loop for font in '("LXGW WenKai Mono Screen" "WenQuanYi Micro Hei Mono" "PingFang SC" "Microsoft Yahei UI" "Simhei")
+  (cl-loop for font in '("Noto Sans CJK SC" "PingFang SC" "Microsoft Yahei UI" "Simhei")
            when (font-installed-p font)
            return (progn
-                    (setq face-font-rescale-alist `((,font . 1.2)))
+                    (setq face-font-rescale-alist `((,font . 1.1)))
                     (set-fontset-font t 'han (font-spec :family font)))))
 
 (add-hook 'window-setup-hook
