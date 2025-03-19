@@ -99,6 +99,8 @@
 (global-set-key (kbd "M-l") 'downcase-dwim)
 (global-set-key (kbd "M-c") 'capitalize-dwim)
 (global-set-key (kbd "<f2>") 'open-init-file)
+(global-set-key (kbd "<f3>") 'open-inbox-file)
+
 
 ;;; custom function
 (defun pulse-line (&rest _)
@@ -120,9 +122,28 @@
   (interactive)
   (find-file "~/.emacs.d/init.el"))
 
+(defun open-inbox-file()
+  "Open Inbox file."
+  (interactive)
+  (find-file "~/org/inbox.org"))
+
 ;; org mode
 (setq org-agenda-files '("~/org/daily.org"
 			 "~/org/TaskManager.org"))
+(setq org-capture-templates nil)
+(setq org-special-ctrl-a/e t)
+
+(add-to-list 'org-capture-templates '("t" "Tasks"))
+(add-to-list 'org-capture-templates
+             '("tr" "Book Reading Task" entry
+               (file+olp "~/sync/org/task.org" "Reading" "Book")
+               "* TODO %^{书名}\n%u\n%a\n" :clock-in t :clock-resume t))
+
+(add-to-list 'org-capture-templates
+             '("tw" "Work Task" entry
+               (file+headline "~/sync/org/task.org" "Work")
+               "* TODO %^{任务名}\n%u\n%a\n" :clock-in t :clock-resume t))
+
 (global-set-key (kbd "C-c l") 'org-store-link)
 (global-set-key (kbd "C-c a") 'org-agenda)
 (global-set-key (kbd "C-c b") 'org-iswitchb)
