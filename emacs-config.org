@@ -1,0 +1,244 @@
+#+TITLE: Emacs Configuration
+#+DATE: 2025/10/24 21:44:50
+
+#+STARTUP: content
+
+* early-init.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle early-init.el
+:END:
+
+#+begin_src emacs-lisp
+  ;;; early-init.el --- Emacs pre-initialization config -*- lexical-binding: t -*-
+  ;;; Commentary:
+  ;;; Code:
+
+  ;; 设置垃圾回收参数
+  (setq gc-cons-threshold most-positive-fixnum)
+  (setq gc-cons-percentage 1.0)
+
+  ;; 启动早期不加载`package.el'包管理器
+  (setq package-enable-at-startup nil)
+  ;; 不从包缓存中加载
+  (setq package-quickstart nil)
+
+  ;; 禁止展示菜单栏、工具栏和纵向滚动条
+  (push '(menu-bar-lines . 0) default-frame-alist)
+  (push '(tool-bar-lines . 0) default-frame-alist)
+  (push '(vertical-scroll-bars) default-frame-alist)
+
+  ;; 禁止自动缩放窗口先
+  (setq frame-inhibit-implied-resize t)
+
+  ;; 禁止菜单栏、工具栏、滚动条模式，禁止启动屏幕和文件对话框
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (setq inhibit-splash-screen t)
+  (setq use-file-dialog nil)
+
+  ;; 在这个阶段不编译
+  (setq comp-deferred-compilation nil)
+
+  (provide 'early-init)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; early-init.el ends here
+#+end_src
+
+* init.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init.el
+:END:
+
+=init.el= 是Emacs的主要配置文件。
+
+** init.el 文件头
+#+BEGIN_SRC emacs-lisp
+;;; init.el --- The main init entry for Emacs -*- lexical-binding: t -*-
+;;; Commentary:
+
+;;; Code:
+
+#+END_SRC
+
+** package.el setting
+#+begin_src emacs-lisp
+  (use-package package
+    :config
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+    (unless (bound-and-true-p package--initialized)
+      (package-initialize)))
+#+end_src
+** simple
+#+begin_src emacs-lisp
+  (use-package hl-line
+    :ensure nil
+    :hook (after-init . global-hl-line-mode))
+
+  (use-package delsel
+    :ensure nil
+    :hook (after-init . delete-selection-mode))
+
+
+  (use-package simple
+    :ensure nil
+    :hook (after-init . (lambda ()
+                          (line-number-mode)
+                          (column-number-mode)
+                          (size-indication-mode)
+  			(icomplete-mode)
+  			(global-completion-preview-mode)
+  			(global-display-line-numbers-mode 1)
+  			(fido-vertical-mode 1)
+  			(pixel-scroll-precision-mode 1)
+  			(auto-save-visited-mode 1)
+  			(which-key-mode)))
+    :hook (prog-mode . (lambda ()
+  		       (prettify-symbols-mode)
+  		       (electric-pair-mode)
+  		       (flymake-mode 1)))
+    :custom
+    (make-backup-files nil)
+    (isearch-lazy-count t)
+    (flymake-show-diagnostics-at-end-of-line 'short)
+    (display-line-numbers-type 'relative)
+    (auto-save-default t)
+    (auto-save-interval 300)
+    (auto-save-timeout 30)
+    (auto-save-visited-interval 5)
+    )
+
+
+  (use-package autorevert
+    :ensure nil
+    :commands (auto-revert-mode global-auto-revert-mode)
+    :hook
+    (after-init . global-auto-revert-mode)
+    :custom
+    (auto-revert-interval 3)
+    (auto-revert-remote-files nil)
+    (auto-revert-use-notify t)
+    (auto-revert-avoid-polling nil)
+    (auto-revert-verbose t))
+
+  (use-package recentf
+    :ensure nil
+    :commands (recentf-mode recentf-cleanup)
+    :hook
+    (after-init . recentf-mode)
+
+    :custom
+    (recentf-auto-cleanup (if (daemonp) 300 'never))
+    (recentf-exclude
+     (list "\\.tar$" "\\.tbz2$" "\\.tbz$" "\\.tgz$" "\\.bz2$"
+           "\\.bz$" "\\.gz$" "\\.gzip$" "\\.xz$" "\\.zip$"
+           "\\.7z$" "\\.rar$"
+           "COMMIT_EDITMSG\\'"
+           "\\.\\(?:gz\\|gif\\|svg\\|png\\|jpe?g\\|bmp\\|xpm\\)$"
+           "-autoloads\\.el$" "autoload\\.el$"))
+
+    :config
+    (add-hook 'kill-emacs-hook #'recentf-cleanup -90))
+
+  (use-package savehist
+    :ensure nil
+    :commands (savehist-mode savehist-save)
+    :hook
+    (after-init . savehist-mode)
+    :custom
+    (savehist-autosave-interval 600)
+    (savehist-additional-variables
+     '(kill-ring                        ; clipboard
+       register-alist                   ; macros
+       mark-ring global-mark-ring       ; marks
+       search-ring regexp-search-ring)))
+
+  (use-package saveplace
+    :ensure nil
+    :commands (save-place-mode save-place-local-mode)
+    :hook
+    (after-init . save-place-mode)
+    :custom
+    (save-place-limit 400))
+#+end_src
+** theme
+#+begin_src emacs-lisp
+  (use-package ef-themes
+    :ensure t
+    :init
+    (mapc #'disable-theme custom-enabled-themes)
+    (ef-themes-select 'ef-dream)
+  )
+#+end_src
+** enhancing elisp
+#+begin_src emacs-lisp
+    ;; Enables automatic indentation of code while typing
+  (use-package aggressive-indent
+    :ensure t
+    :commands aggressive-indent-mode
+    :hook
+    (emacs-lisp-mode . aggressive-indent-mode))
+
+  ;; Highlights function and variable definitions in Emacs Lisp mode
+  (use-package highlight-defined
+    :ensure t
+    :commands highlight-defined-mode
+    :hook
+    (emacs-lisp-mode . highlight-defined-mode))
+
+  (use-package paredit
+    :ensure t
+    :commands paredit-mode
+    :hook
+    (emacs-lisp-mode . paredit-mode)
+    :config
+    (define-key paredit-mode-map (kbd "RET") nil))
+
+#+end_src
+** org
+
+#+begin_src emacs-lisp
+  (use-package org-capture
+    :ensure nil
+    :bind  (("C-c c" . org-capture))
+    :custom
+    (org-capture-templates '(("t" "TODO" entry (file+headline "~/org/gtd.org" "Tasks")
+  			    "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+  			   ("r" "READING" entry (file+headline "~/org/reading.org" "Reading")
+  			    "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+  			   ("b" "BLOG" entry (file+headline "~/org/blog.org" "Blog")
+  			    "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+  			   ))
+    )
+
+  (use-package org-agenda
+    :ensure nil
+    :bind (("C-c a" . org-agenda))
+    :custom
+    (org-agenda-files '("~/org/gtd.org" "~/org/reading.org" "~/org/blog.org"))
+    )
+
+  (use-package org-modern
+    :ensure t
+    :init
+    (with-eval-after-load 'org (global-org-modern-mode)))
+
+
+#+end_src
+
+** font face
+#+begin_src emacs-lisp
+  (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
+  (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book")
+  (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono"))
+#+end_src
+
+** treesitter
+
+** init.el 文件尾
+#+BEGIN_SRC emacs-lisp
+
+(provide 'init)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init.el ends here
+#+END_SRC
