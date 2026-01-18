@@ -167,8 +167,10 @@
     :ensure t
     :init
     (mapc #'disable-theme custom-enabled-themes)
-    (ef-themes-select 'ef-dream)
-  )
+    ;;    (ef-themes-select 'ef-dream)
+    )
+  (load-theme 'ef-dream t)
+
 #+end_src
 ** enhancing elisp
 #+begin_src emacs-lisp
@@ -234,6 +236,16 @@
 #+end_src
 
 ** treesitter
+
+** git
+
+#+begin_src elisp
+  (use-package diff-hl
+    :ensure t)
+
+  (use-package magit
+    :ensure t)
+#+end_src
 
 ** init.el 文件尾
 #+BEGIN_SRC emacs-lisp
