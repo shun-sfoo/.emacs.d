@@ -247,6 +247,25 @@
     :ensure t)
 #+end_src
 
+** editor
+
+#+begin_src elisp
+  (use-package multiple-cursors
+    :ensure t
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->" . mc/mark-next-like-this)
+           ("C-<" . mc/mark-previous-like-this)
+           ("C-c C-<" . mc/mark-all-like-this)
+           ("C-c m c" . mc/edit-beginnings-of-lines)
+           ("C-c m e" . mc/edit-ends-of-lines))
+    :config
+    (setq mc/list-file "～/.emacs.d/.mc-lists.el")) ; 可选：保存宏
+
+  (use-package indent-bars
+    :ensure t
+    :hook ((prog-mode) . indent-bars-mode))
+#+end_src
+
 ** init.el 文件尾
 #+BEGIN_SRC emacs-lisp
 
