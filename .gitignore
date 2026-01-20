@@ -17,5 +17,5 @@ custom.el
 tutorial/
 *~
 tramp
-early-init.el
-init.el
+.mc-lists.el
+projects
