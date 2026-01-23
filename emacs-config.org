@@ -106,7 +106,6 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package emacs
     :ensure nil
     :custom
-    (mac-option-modifier 'meta)
     (bidi-paragraph-direction 'left-to-right)
     (bidi-inhibit-bpa t)
     (fast-but-imprecise-scrolling t)
@@ -118,6 +117,9 @@ https://github.com/zhangjie2012/use-package-document-cn
     (load-prefer-newer t)
     :config
     (setq auto-window-vscroll nil)
+    (when (eq system-type 'darwin)
+      (setq mac-option-modifier 'meta)
+      )
     )
 
   (use-package bookmark
@@ -178,6 +180,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 
   (use-package pixel-scroll
     :ensure nil
+    :if (display-graphic-p)
     :hook
     (after-init . pixel-scroll-precision-mode))
 
@@ -200,11 +203,6 @@ https://github.com/zhangjie2012/use-package-document-cn
   ;;   :ensure nil
   ;;   :custom
   ;;   (inhibit-startup-screen t))
-
-  (use-package saveplace
-    :ensure nil
-    :hook
-    (after-init . save-place-mode))
 
   (use-package which-func
     :ensure nil
@@ -357,6 +355,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     (save-place-limit 400))
 
   (use-package faces
+    :if (display-graphic-p)
     :ensure nil
     :config
     (if (eq system-type 'darwin)
