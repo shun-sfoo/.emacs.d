@@ -1,151 +1,354 @@
-(setq mac-option-modifier 'meta)
+;;; init.el --- The main init entry for Emacs -*- lexical-binding: t -*-
+;;; Commentary:
 
-;;; Buffer
-(customize-set-variable 'global-auto-revert-non-file-buffers t)
-(global-auto-revert-mode t)
+;;; Code:
 
-(customize-set-variable 'dired-dwim-target t)
-(customize-set-variable 'dired-auto-revert-buffer t)
-(customize-set-variable 'eshell-scroll-to-bottom-on-input 'this)
-(customize-set-variable 'switch-to-buffer-in-dedicated-window 'pop)
-(customize-set-variable 'switch-to-buffer-obey-display-actions t)
-(keymap-global-set "<remap> <list-buffers>" #'ibuffer-list-buffers)
-(customize-set-variable 'ibuffer-movement-cycle nil)
-(customize-set-variable 'ibuffer-old-time 24)
+(use-package package
+  :unless  (eq system-type "window-nt")
+  :config
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+  (unless (bound-and-true-p package--initialized)
+    (package-initialize)))
 
-;;; Completion settings
+(use-package emacs
+  :ensure nil
+  :custom
+  (mac-option-modifier 'meta))
 
-(fido-vertical-mode)
+(use-package hl-line
+  :ensure nil
+  :hook (after-init . global-hl-line-mode))
 
-(when (version< "30" emacs-version)
-  (global-completion-preview-mode 1)
-  (keymap-set completion-preview-active-mode-map "M-n" #'completion-preview-next-candidate)
-  (keymap-set completion-preview-active-mode-map "M-p" #'completion-preview-prev-candidate))
+(use-package delsel
+  :ensure nil
+  :hook (after-init . delete-selection-mode))
 
-;; No matter which completion mode is used:
-(customize-set-variable 'tab-always-indent 'complete)
-(customize-set-variable 'completion-cycle-threshold 3)
-(customize-set-variable 'completion-category-overrides
-                        '((file (styles . (partial-completion)))))
-(customize-set-variable 'completions-detailed t)
+(use-package global-line-numbers
+  :ensure nil
+  :hook (after-init . global-display-line-numbers-mode))
 
-;; use completion system instead of popup window
-(customize-set-variable 'xref-show-definitions-function
-                        #'xref-show-definitions-completing-read)
+(use-package icomplete
+  :ensure nil
+  :hook (after-init . fido-vertical-mode))
 
-;;; Editing
+(use-package display-line-numbers
+  :ensure nil
+  :custom
+  (display-line-numbers-type 'relative))
 
-;; Typed text replaces the selection if the selection is active,
-;; pressing delete or backspace deletes the selection.
-(delete-selection-mode)
+(use-package completion-preview
+  :ensure nil
+  :if (version< "30" emacs-version)
+  :hook
+  (after-init . global-completion-preview-mode))
 
-;; Use spaces instead of tabs
-(setq-default indent-tabs-mode nil)
+(use-package which-key
+  :ensure nil
+  :if (version< "30" emacs-version)
+  :hook
+  (after-init . which-key-mode))
 
-;; Do not save duplicates in kill-ring
-(customize-set-variable 'kill-do-not-save-duplicates t)
+(use-package pixel-scroll
+  :ensure nil
+  :hook
+  (after-init . pixel-scroll-precision-mode))
 
-;; Better support for files with long lines
-(setq-default bidi-paragraph-direction 'left-to-right)
-(setq-default bidi-inhibit-bpa t)
-(global-so-long-mode 1)
+(use-package files
+  :ensure nil
+  :hook
+  (after-init . auto-save-visited-mode)
+  (after-save . executable-make-buffer-file-executable-if-script-p)
+  :custom
+  (make-backup-files nil)
+  (auto-save-default t)
+  (auto-save-visited-interval 5))
 
-;; define a key to define the word at point.
-(keymap-set global-map "M-#" #'dictionary-lookup-definition)
+(use-package repeat
+  :ensure nil
+  :hook
+  (after-init . repeat-mode))
 
-;; Show dictionary definition on the left
-(add-to-list 'display-buffer-alist
-             '("^\\*Dictionary\\*"
-               (display-buffer-in-side-window)
-               (side . left)
-               (window-width . 70)))
+;; (use-package  startup
+;;   :ensure nil
+;;   :custom
+;;   (inhibit-startup-screen t))
 
-;; turn on spell checking, if available.
-(with-eval-after-load 'ispell
-  (when (executable-find ispell-program-name)
-    (add-hook 'text-mode-hook #'flyspell-mode)
-    (add-hook 'prog-mode-hook #'flyspell-prog-mode)))
+(use-package saveplace
+  :ensure nil
+  :hook
+  (after-init . save-place-mode))
 
-;;; Persistence between sessions
+(use-package which-func
+  :ensure nil
+  :hook
+  (after-init . which-function-mode))
 
-;; Turn on recentf mode
-(add-hook 'after-init-hook #'recentf-mode)
+(use-package elec-pair
+  :ensure nil
+  :hook
+  (after-init . electric-pair-mode))
 
-;; Enable savehist-mode for command history
-(savehist-mode 1)
+(use-package electric
+  :ensure nil
+  :hook
+  (after-init . electric-indent-mode))
 
-;; save the bookmarks file every time a bookmark is made or deleted
-;; rather than waiting for Emacs to be killed.  Useful especially when
-;; Emacs is a long running process.
-(customize-set-variable 'bookmark-save-flag 1)
+(use-package flymake
+  :ensure nil
+  :hook
+  (prog-mode . flymake-mode)
+  :config
+  (when (version< "30" emacs-version)
+    (setq flymake-show-diagnostics-at-end-of-line 'short)))
 
-;; Make scrolling less stuttered
-(setq auto-window-vscroll nil)
-(customize-set-variable 'fast-but-imprecise-scrolling t)
-(customize-set-variable 'scroll-conservatively 101)
-(customize-set-variable 'scroll-margin 0)
-(customize-set-variable 'scroll-preserve-screen-position t)
+(use-package isearch
+  :ensure nil
+  :custom
+  (isearch-lazy-count t))
+
+(use-package simple
+  :ensure nil
+  :hook (after-init . (lambda ()
+                        (line-number-mode)
+                        (column-number-mode)
+                        (size-indication-mode)
+                        ))
+  :hook (prog-mode . (lambda ()
+                       (prettify-symbols-mode)
+                       ))
+  :custom
+  (auto-save-interval 300)
+  (auto-save-timeout 30)
+  (indent-tabs-mode nil)
+  (kill-do-not-save-duplicates t))
 
 
-;; open man pages in their own window, and switch to that window to
-;; facilitate reading and closing the man page.
-(customize-set-variable 'Man-notify-method 'aggressive)
+(use-package autorevert
+  :ensure nil
+  :commands (auto-revert-mode global-auto-revert-mode)
+  :hook
+  (after-init . global-auto-revert-mode)
+  :custom
+  (global-auto-revert-non-file-buffers t)
+  (auto-revert-interval 3)
+  (auto-revert-remote-files nil)
+  (auto-revert-use-notify t)
+  (auto-revert-avoid-polling nil)
+  (auto-revert-verbose t))
 
-;; keep the Ediff control panel in the same frame
-(customize-set-variable 'ediff-window-setup-function
-                        'ediff-setup-windows-plain)
+(use-package dired
+  :ensure nil
+  :custom
+  (dired-dwim-target t)
+  (dired-auto-revert-buffer t))
 
-;; Window configuration for special windows.
-(add-to-list 'display-buffer-alist
-             '("\\*Help\\*"
-               (display-buffer-reuse-window display-buffer-pop-up-window)))
+(use-package esh-mode
+  :ensure nil
+  :custom
+  (eshell-scroll-to-bottom-on-input 'this))
 
-(add-to-list 'display-buffer-alist
-             '("\\*Completions\\*"
-               (display-buffer-reuse-window display-buffer-pop-up-window)
-               (inhibit-same-window . t)
-               (window-height . 10)))
+(use-package window
+  :ensure nil
+  :custom
+  (switch-to-buffer-in-dedicated-window 'pop)
+  (switch-to-buffer-obey-display-actions t)
+  :config
+  (add-to-list 'display-buffer-alist
+               '("^\\*Dictionary\\*"
+                 (display-buffer-in-side-window)
+                 (side . left)
+                 (window-width . 70)))
+  (add-to-list 'display-buffer-alist
+               '("\\*Help\\*"
+                 (display-buffer-reuse-window display-buffer-pop-up-window)))
+  )
 
-;;; Miscellaneous
+(use-package ibuffer
+  :ensure nil
+  :bind ([remap list-buffers] . #'ibuffer-list-buffers)
+  :custom
+  (ibuffer-movement-cycle nil)
+  (ibuffer-old-time 24))
 
-;; Load source (.el) or the compiled (.elc or .eln) file whichever is
-;; newest
-(customize-set-variable 'load-prefer-newer t)
+;; (use-package indent
+;;   :ensure nil
+;;   :custom
+;;   (tab-always-indent 'complete)
+;;   )
 
-;; Make shebang (#!) file executable when saved
-;; 保存一个包含 shebang 行的文件时，自动将其设为可执行文件(即运行 chmod +x)
-(add-hook 'after-save-hook
-          #'executable-make-buffer-file-executable-if-script-p)
+(use-package minibuffer
+  :ensure nil
+  :custom
+  (completion-cycle-threshold 3)
+  (completion-category-overrides '((file (styles . (partial-completion)))))
+  (completions-detailed t))
 
-;; Turn on repeat mode to allow certain keys to repeat on the last
-;; keystroke. For example, C-x [ to page backward, after pressing this
-;; keystroke once, pressing repeated [ keys will continue paging
-;; backward. `repeat-mode' is exited with the normal C-g, by movement
-;; keys, typing, or pressing ESC three times.
-(repeat-mode 1)
+(use-package xref
+  :ensure nil
+  :custom
+  (xref-show-definitions-function  #'xref-show-definitions-completing-read))
 
-(global-hl-line-mode)
+(use-package recentf
+  :ensure nil
+  :commands (recentf-mode recentf-cleanup)
+  :hook
+  (after-init . recentf-mode)
+  :custom
+  (recentf-auto-cleanup (if (daemonp) 300 'never))
+  (recentf-exclude
+   (list "\\.tar$" "\\.tbz2$" "\\.tbz$" "\\.tgz$" "\\.bz2$"
+         "\\.bz$" "\\.gz$" "\\.gzip$" "\\.xz$" "\\.zip$"
+         "\\.7z$" "\\.rar$"
+         "COMMIT_EDITMSG\\'"
+         "\\.\\(?:gz\\|gif\\|svg\\|png\\|jpe?g\\|bmp\\|xpm\\)$"
+         "-autoloads\\.el$" "autoload\\.el$"))
+  :config
+  (add-hook 'kill-emacs-hook #'recentf-cleanup -90))
 
-(setq display-line-numbers-type 'relative)
-(global-display-line-numbers-mode)
+(use-package savehist
+  :ensure nil
+  :commands (savehist-mode savehist-save)
+  :hook
+  (after-init . savehist-mode)
+  :custom
+  (savehist-autosave-interval 600)
+  (savehist-additional-variables
+   '(kill-ring                        ; clipboard
+     register-alist                   ; macros
+     mark-ring global-mark-ring       ; marks
+     search-ring regexp-search-ring)
+   )
+  )
 
-(line-number-mode)
-(column-number-mode)
-(setq inhibit-startup-screen t)
+(use-package saveplace
+  :ensure nil
+  :commands (save-place-mode save-place-local-mode)
+  :hook
+  (after-init . save-place-mode)
+  :custom
+  (save-place-limit 400))
 
-(set-face-attribute 'default nil :height 140 :font "Operator Mono Lig Book Light")
-(set-face-attribute 'bold nil :height 140 :font "Operator Mono Lig Book")
-;;(set-face-attribute 'default nil :height 150 :font "Monaco")
+(use-package faces
+  :ensure nil
+  :config
+  (if (eq system-type 'darwin)
+      (set-face-attribute 'default nil :height 150 :font "Operator Mono Lig Book")
+    (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
+    (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book"))
+  (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono")))
 
-;;(require 'gruber-darker-theme)
+(use-package treesit
+  :ensure nil
+  :custom
+  (treesit-font-lock-level 4)
+  (major-mode-remap-alist
+   '((python-mode . python-ts-mode)
+     (js-mode . js-ts-mode)
+     (css-mode . css-ts-mode)
+     (c-mode . c-ts-mode)
+     (c++-mode . c++-ts-mode)
+     (c-or-c++-mode . c-or-c++-ts-mode)
+     (sh-mode . bash-ts-mode)))
+  :config
+  (setq treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (cmake "https://github.com/uyha/tree-sitter-cmake")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (c "https://github.com/tree-sitter/tree-sitter-c")
+          (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (make "https://github.com/alemuller/tree-sitter-make")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+          )
+        )
+  )
 
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-(load custom-file 'noerror)
+;;(mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 
-;;(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-;;(load-theme 'gruber-darker t)
-;;(load-theme 'carbon t)
+(use-package ef-themes
+  :ensure t
+  :init
+  (mapc #'disable-theme custom-enabled-themes)
+  :config
+  (load-theme 'ef-dream t)    
+  )
 
-(if (version< "30" emacs-version)
-     (load-theme 'modus-vivendi-deuteranopia t)
-  (load-them 'modus-vivendi t))
+;; Enables automatic indentation of code while typing
+(use-package aggressive-indent
+  :ensure t
+  :commands aggressive-indent-mode
+  :hook
+  (emacs-lisp-mode . aggressive-indent-mode))
+
+;; Highlights function and variable definitions in Emacs Lisp mode
+(use-package highlight-defined
+  :ensure t
+  :commands highlight-defined-mode
+  :hook
+  (emacs-lisp-mode . highlight-defined-mode))
+
+(use-package paredit
+  :ensure t
+  :commands paredit-mode
+  :hook
+  (emacs-lisp-mode . paredit-mode)
+  :config
+  (define-key paredit-mode-map (kbd "RET") nil))
+
+(use-package org-capture
+  :ensure nil
+  :bind  (("C-c c" . org-capture))
+  :custom
+  (org-capture-templates '(("t" "TODO" entry (file+headline "~/org/gtd.org" "Tasks")
+  			  "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+  			 ("r" "READING" entry (file+headline "~/org/reading.org" "Reading")
+  			  "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+  			 ("b" "BLOG" entry (file+headline "~/org/blog.org" "Blog")
+  			  "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+  			 ))
+  )
+
+(use-package org-agenda
+  :ensure nil
+  :bind (("C-c a" . org-agenda))
+  :custom
+  (org-agenda-files '("~/org/gtd.org" "~/org/reading.org" "~/org/blog.org"))
+  )
+
+(use-package org-modern
+  :ensure t
+  :init
+  (with-eval-after-load 'org (global-org-modern-mode)))
+
+(use-package diff-hl
+  :ensure t)
+
+(use-package magit
+  :ensure t)
+
+(use-package multiple-cursors
+  :ensure t
+  :bind (("C-S-c C-S-c" . mc/edit-lines)
+         ("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)
+         ("C-c C-<" . mc/mark-all-like-this)
+         ("C-c m c" . mc/edit-beginnings-of-lines)
+         ("C-c m e" . mc/edit-ends-of-lines))
+  :config
+  (setq mc/list-file "～/.emacs.d/.mc-lists.el")) ; 可选：保存宏
+
+(use-package indent-bars
+  :ensure t
+  :hook ((prog-mode) . indent-bars-mode))
+
+(provide 'init)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init.el ends here

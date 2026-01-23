@@ -19,3 +19,5 @@ tutorial/
 tramp
 .mc-lists.el
 projects
+org-persist
+tree-sitter
