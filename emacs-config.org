@@ -95,7 +95,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 ** package.el setting
 #+begin_src emacs-lisp
   (use-package package
-    :unless  (eq system-type "window-nt")
+    :unless  (eq system-type 'window-nt)
     :config
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     (unless (bound-and-true-p package--initialized)
@@ -106,11 +106,43 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package emacs
     :ensure nil
     :custom
-    (mac-option-modifier 'meta))
+    (mac-option-modifier 'meta)
+    (bidi-paragraph-direction 'left-to-right)
+    (bidi-inhibit-bpa t)
+    (fast-but-imprecise-scrolling t)
+    (scroll-conservatively 101)
+    (scroll-margin 0)
+    (scroll-preserve-screen-position t)
+    (Man-notify-method 'aggressive)
+    (ediff-window-setup-function 'ediff-setup-windows-plain)
+    (load-prefer-newer t)
+    :config
+    (setq auto-window-vscroll nil)
+    )
+
+  (use-package bookmark
+    :ensure nil
+    :custom
+    (bookmark-save-flag 1))
+
+  (use-package dictionary
+    :ensure nil
+    :bind ("M-#" . dictionary-lookup-definition))
+
+  ;; (use-package ispell
+  ;;   :when (executable-find "aspell")
+  ;;   :hook
+  ;;   (text-mode . flyspell-mode)
+  ;;   (prog-mode . flyspell-prog-mode))
 
   (use-package hl-line
     :ensure nil
     :hook (after-init . global-hl-line-mode))
+
+  (use-package so-long
+    :ensure nil
+    :hook
+    (after-init . global-so-long-mode))
 
   (use-package delsel
     :ensure nil
@@ -132,6 +164,9 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package completion-preview
     :ensure nil
     :if (version< "30" emacs-version)
+    :bind (:map completion-preview-active-mode-map
+                ("M-n" . completion-preview-next-candidate)
+                ("M-p" . completion-preview-prev-candidate))
     :hook
     (after-init . global-completion-preview-mode))
 
@@ -348,6 +383,8 @@ https://github.com/zhangjie2012/use-package-document-cn
             (cmake "https://github.com/uyha/tree-sitter-cmake")
             (css "https://github.com/tree-sitter/tree-sitter-css")
             (go "https://github.com/tree-sitter/tree-sitter-go")
+            (c "https://github.com/tree-sitter/tree-sitter-c")
+            (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
             (html "https://github.com/tree-sitter/tree-sitter-html")
             (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
             (json "https://github.com/tree-sitter/tree-sitter-json")
@@ -372,7 +409,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     :init
     (mapc #'disable-theme custom-enabled-themes)
     :config
-    (load-theme 'ef-dream t)    
+    (load-theme 'ef-dream t)
     )
 
 
@@ -432,8 +469,6 @@ https://github.com/zhangjie2012/use-package-document-cn
 
 
 #+end_src
-
-** treesitter
 
 ** git
 

@@ -21,3 +21,5 @@ tramp
 projects
 org-persist
 tree-sitter
+init.el
+early-init.el
