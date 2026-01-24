@@ -2,6 +2,17 @@
 #+DATE: 2025/10/24 21:44:50
 
 #+STARTUP: content
+* 查表
+查 repeat-map
+
+`M-x describe-repeat-maps`
+
+查操作其他窗口的行为
+`C-x 4 C-h`
+
+查当前缓冲区的语法表
+`C-h s`
+
 * org babel
 `org-babel-tangle` to generate config elisp
 `C-c '` to edit source code
@@ -197,7 +208,19 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package repeat
     :ensure nil
     :hook
-    (after-init . repeat-mode))
+    (after-init . repeat-mode)
+    ;; :config
+    ;; (defvar neo/struct-repeat-map
+    ;;   (let ((map (make-sparse-keymap)))
+    ;;     (define-key map (kbd "C-M-f") #'forward-sexp)
+    ;;     map
+    ;;     )
+    ;;   "structed map"
+    ;;   )
+    ;; (dolist (cmd '(forward-sexp))
+    ;;   (put cmd 'repeat-map 'neo/struct-repeat-map)
+    ;;   )
+    )
 
   ;; (use-package  startup
   ;;   :ensure nil
@@ -359,10 +382,17 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure nil
     :config
     (if (eq system-type 'darwin)
-        (set-face-attribute 'default nil :height 150 :font "Operator Mono Lig Book")
-      (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
-      (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book"))
-    (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono")))
+        (progn
+          (set-face-attribute 'default nil :height 150 :font "Operator Mono Lig Book")
+          (set-fontset-font t 'han (font-spec :family "PingFang SC"))
+          )
+      (progn
+        (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
+        (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book")
+        (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono"))
+        )
+      )
+    )
 
   (use-package treesit
     :ensure nil
@@ -384,6 +414,7 @@ https://github.com/zhangjie2012/use-package-document-cn
             (go "https://github.com/tree-sitter/tree-sitter-go")
             (c "https://github.com/tree-sitter/tree-sitter-c")
             (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+            (rust "https://github.com/tree-sitter/tree-sitter-rust")
             (html "https://github.com/tree-sitter/tree-sitter-html")
             (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
             (json "https://github.com/tree-sitter/tree-sitter-json")

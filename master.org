@@ -1,0 +1,88 @@
+* Mastering Emacs Notebook
+
+** The Theory of Movement
+
+*** The Basics
+
+查看有哪些 repeat map 通过 `M-x describe-repeat-maps`
+
+`C-\` :Undo
+
+`C-x u` 实现了 repeat-mode 可以通过 `C-x u... u` 的方式来连续撤销
+
+In Emacs, Every action you take is recorded in the undo ring,
+and this includes the action of undoing something. Emacs will
+group certain commands together into one coheesive undo cell
+like typing characters or repeating the same command many times
+in a row. Some events will always "seal" the undo record and
+start a new one. Pressing RET, backspace, or moving the point
+around are three such examples.
+
+在 emacs中， 你所执行的每一个操作都会记录在撤销环中。
+这设置包括执行撤销操作本身。Emacs会将某些命令组合成一个连贯的撤销单元，
+例如连续输入多个字符或多次重复执行相同的命令。有些操作会“封闭”当前的
+撤销记录并开始一个新的记录。按下回车键，退格或移动光标就是三个这样的例子。
+
+Repeated undo commands will undo more and more things but if you break
+the cycle -- for instance by moving around or editing text -- Emacs will
+not resume from where you left off. Instead, the items you just undid were
+added to the undo ring as redo records. That means when you undo again, you
+will actually undo (redo) the actions you just did until you get to the state
+you were at when you last stopped -- then Emacs will undo the rest of the
+changes in you buffer.
+
+重复执行撤销（undo） 命令会撤销越来越多的操作， 但如果你中断了这个循环--例如通过
+光标或编辑文本--Emacs将不会从你中断的继续撤销。相反，你刚刚撤销的操作会被作为重做（redo）
+记录添加到撤销环中。这意味着当你再次执行撤销操作是，实际上会撤销（即重做）你刚刚执行的操作，
+直到回到你上提停止时的状态为止；然后 Emacs 才会继续撤销缓冲区的其余更改。
+
+*** Elemental Movement
+
+**** Movement Asymmetry
+移动的不对称性
+
+Emacs will cleverly skip symbols and punctuation it encounters in the direction
+(forward or backward) you're moving.
+
+emacs 会在其移动方向上忽略首先遇到的标点符号。
+
+**** Moving by S-Expressions
+sexpr covers a wide range of commands that operate on balanced expressions
+涵盖了对平衡表达式进行操作的多种命令。
+
+通常包括以下内容：
+字符串， 以`"` , `'`开始或结尾
+括号，包含`[] {} () <>`
+平衡表达式能跨越多行
+其修饰键为`C-M-`
+`C-M-f` 按s表达式向前移动
+`C-M-b` 按s表达式向后移动
+
+Down an Up List
+`C-M-d` move down into a list
+`C-M-u` move up out of a list
+like the word commands, the list commands are not symmetric
+going up will take you one level but leave your point at the opening character.
+向上操作会提升一个层级，但将光标位置留在列表的起始字符处。
+
+`C-M-u` 与 `C-M-k` (kill-sexp) 结合，用来删除刚刚所在位置的平衡表达式。
+
+Forward and Backward List
+`C-M-n` Move forward to next list
+`C-M-p` Move backward to the previous list
+The move to the next or the previos list expression in the same nested level.
+
+通过 与`C-M-u` 组合， 在上级列表中移动。
+
+Moving by Defun
+`C-M-a` Move to begining of defun
+`C-M-e` Move to end of defun
+
+**** Scrolling
+`C-v` Scroll down a near full screen
+`M-v` Scrool up a near full screen
+`C-M-v` Scroll down the other window
+`C-M-S-v` Scroll up othe other window
+
+`C-M-- C-M-v` Scroll up other other window either
+`C-M--` means negative argument like `C-u`
