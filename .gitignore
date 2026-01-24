@@ -23,3 +23,5 @@ org-persist
 tree-sitter
 init.el
 early-init.el
+tsoding/build/
+nob
