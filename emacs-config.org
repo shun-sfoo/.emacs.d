@@ -431,6 +431,10 @@ https://github.com/zhangjie2012/use-package-document-cn
 
   ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 
+  (use-package c-ts-mode
+    :ensure nil
+    :custom
+    (c-ts-mode-indent-offset 4))
 #+end_src
 ** theme
 #+begin_src emacs-lisp
