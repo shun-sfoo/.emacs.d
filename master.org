@@ -86,3 +86,131 @@ Moving by Defun
 
 `C-M-- C-M-v` Scroll up other other window either
 `C-M--` means negative argument like `C-u`
+
+*** Selections and Regions
+
+Mark ring
+`C-u C-@` return mark point
+`C-x C-x` exchange-point-and-mark
+`C-x SPC` rectangle-mark-mode
+
+Setting the Mark
+`M-h` Marks the next paragraph
+`C-x h` Marks the whole buffer
+`C-M-h` Marks the next defun
+`M-@` Marks the next word
+`C-M-<SPC` `C-M-@` Marks the next s-expresion, usefull `C-M- C-M-<SPC>`
+All mark commands append to the existing selection if you already have a
+region active.
+If you want to mark two words in a row, all you have to do is press `M-@` twice
+or combine it with a numberic argument: `M-2 M-@`
+
+*** Isearch: Incremental Search
+`C-s`  Begins an incremental search
+`C-r` Begins a backward incremental search
+`C-M-s` Begins a regexp incremental search
+`C-M-r` Begins a regexp backward incremental
+must custom `isearch-allow-motion` to toggle open
+`M-<, M->` Jump to first or last match
+`C-v, M-v` Jump to the next or previos match not current visible
+you can type `C-s C-s` to first open Isearch and then recall the last search string.
+
+`M-n` Move to next item in search history
+`M-p` Move to previos item in search history
+
+`C-w` Add word ap point to search string. appendable
+`C-M-y` Add character at point to search string. For unicode
+`M-s C-e` Add rest of line at point to search string.
+`C-y` Yank from clipboard to search string.
+
+search toggle control
+`M-s c` Toggle case-sensitivity
+`M-s r` Toggle regular-expression mode
+`M-s w` Toggle word mode. search can contain like `-` but no need to type
+for `foo->bar = 42` can type `foo bar` search by `M-s w`
+`M-s _` Toggle symbol mode
+`M-s <SPC> Toggle lax whitespace matching
+`M-s '` Toggle character folding
+
+global key mapping for isearch
+`M-s w` Isearch forward word
+`M-s _` Isearch forward for symbol
+`M-s .` Isearch forward for symbol at point
+`M-s M-.` Isearch forward for thing at point
+
+*** Occur
+Print and Edit lines matching an expression
+`M-s o` type `Meta and s and o` Occur mode (Outside Isearch)
+`M-s o` Activate occur on current search string (Inside Isearch)
+Unlike Isearch , you're asked for a regular expression for which to search.
+Occur mode searches for lines that match the regular expression and shows you
+the results in a sparate buffer.
+use `line-matching-lines-default-context-lines` show context lines
+Occur mode key binding
+`M-n, M-p` Go to next and previous occurrence
+`<,>` Go to beginningand end of buffer
+`g` Revert the buffer, refreshing the search results
+`q` Quits occur mode
+`e` Switches to occur edit mode
+`C-c C-c` Exits occur edit mode and applies changes
+
+In origal windows
+`M-g M-n` Jump to next "errro"
+`M-g M-p" Jump to previos "error"
+Can be used in `M-x compile` or `M-x grep` and support repeat mode
+
+**** Multi-Occur
+`M-x multi-occur-in-matching-buffers`  use `\.py$`
+or use `M-x multi-occur` by select
+
+*** Imenu
+
+`M-g i` imenu can rebind in `M-i`
+
+search uncertain comand by use `C-h a` apropos-command
+
+** The Theory of Editing
+*** Killing and Yanking Text
+`C-d, DEL` Delete character
+`<backspace> Delete previos character
+`M-d, C-<backspace>` Kill word
+`C-k` Kill rest of line
+`M-k` Kill sentence
+`C-M-k` Kill s-expression
+`C-S-<backspace>` Kill current line
+
+kill and yanking command
+`C-w` Kill active region
+`M-w` Copy to kill ring
+`C-M-w` Append kill
+`C-y` Yank last kill
+`M-y` Cycle through kill ring
+`M-y` show kill ring. This feature is only avaliable if
+you haven't just called yank with `C-y`.
+
+like undo ring, the Movement command broke the cycle.
+
+*** Transposing Text
+`C-t` Transpose characters
+`M-t` Transpose words
+`C-M-t` Transpose s-expression
+`C-x C-t` Transpose lines
+
+How Transposing Actually Works
+The `M-t` command is intrinsically linked to the
+`M-x forward-word (M-f)` command. Emacs will call `M-f` two times:
+once with a negative argument, to get the left-side word to transpose;
+and once again without a negative arguent, to get right-side word to
+transpose
+
+*** Search and Replace
+
+`C-M-%` Query regexp search and replace
+`M-%` Query search and replace
+`M-x replace-string` Search and replace
+`M-x replace-regexp` Regexp search and replace
+You can also access Emacs's search adn replace from inside Isearch:
+`C-M-%` Query regexp search and replace
+`M-%` Query search and replace
+
+
