@@ -499,8 +499,9 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package org-modern
     :ensure t
     :hook
-    (org . global-org-modern-mode))
-
+    (org-mode . global-org-modern-mode)
+    (org-agenda-finalize. org-modern-agenda)
+    )
 
 #+end_src
 
