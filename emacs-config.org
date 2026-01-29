@@ -106,7 +106,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 ** package.el setting
 #+begin_src emacs-lisp
   (use-package package
-    :unless  (eq system-type 'window-nt)
+    :unless  (eq system-type 'windows-nt)
     :config
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     (unless (bound-and-true-p package--initialized)
@@ -230,7 +230,7 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package which-func
     :ensure nil
     :hook
-    (after-init . which-function-mode))
+    (prog-mode . which-function-mode))
 
   (use-package elec-pair
     :ensure nil
@@ -481,12 +481,12 @@ https://github.com/zhangjie2012/use-package-document-cn
     :bind  (("C-c c" . org-capture))
     :custom
     (org-capture-templates '(("t" "TODO" entry (file+headline "~/org/gtd.org" "Tasks")
-  			    "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
-  			   ("r" "READING" entry (file+headline "~/org/reading.org" "Reading")
-  			    "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
-  			   ("b" "BLOG" entry (file+headline "~/org/blog.org" "Blog")
-  			    "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
-  			   ))
+                            "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                           ("r" "READING" entry (file+headline "~/org/reading.org" "Reading")
+                            "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                           ("b" "BLOG" entry (file+headline "~/org/blog.org" "Blog")
+                            "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                           ))
     )
 
   (use-package org-agenda
@@ -498,8 +498,8 @@ https://github.com/zhangjie2012/use-package-document-cn
 
   (use-package org-modern
     :ensure t
-    :init
-    (with-eval-after-load 'org (global-org-modern-mode)))
+    :hook
+    (org . global-org-modern-mode))
 
 
 #+end_src

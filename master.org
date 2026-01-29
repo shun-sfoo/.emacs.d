@@ -99,7 +99,7 @@ Setting the Mark
 `C-x h` Marks the whole buffer
 `C-M-h` Marks the next defun
 `M-@` Marks the next word
-`C-M-<SPC` `C-M-@` Marks the next s-expresion, usefull `C-M- C-M-<SPC>`
+`C-M-<SPC>` `C-M-@` Marks the next s-expresion, usefull `C-M- C-M-<SPC>`
 All mark commands append to the existing selection if you already have a
 region active.
 If you want to mark two words in a row, all you have to do is press `M-@` twice
@@ -214,3 +214,39 @@ You can also access Emacs's search adn replace from inside Isearch:
 `M-%` Query search and replace
 
 
+** 工具观
+为什么放弃了编写代码到极致的neovim 选择了emacs
+首先是收到了tsoding的影响， 只用emacs基本裸配置， 通过compile 模式进行编译和
+运行终端命令的方式完成代码的编写，调试。 然后看到油管视频【怒喷c++2小时】  认识到
+c++ 可能真的适合持续投资， 内部有太多的边角情况，在真正写价值的代码之前， 会被
+类的设置， 资源释放， 异常处理等占据时间， 从而还没深入到核心就放弃了。
+
+然后从工具核心来说， emacs 是 all-in-one 的模式， 什么都在上面做， 而vim是
+do one thing best 模式， 过去推崇后者， 让每个做到极致的软件相互配合。
+这种思想是好，直到打开电脑后 不再打开终端，开启vim的时候，再好的软件，不去用也就无意义
+而emacs可以写文档 org-mode， 文件管理 dired， 看视频 mpv 待加入工作流。随时地记录，
+是怕遗忘， 怕一件事反复的在开头重复，浪费了时间， 不能真正深入。
+到这一步，所谓代码补全， lsp协议反而是最不重要的了， emacs可以真正让你写起来， 至于
+效率问题 emacs也有补全方案lsp， 而不是磨好了利剑，一直放在剑鞘中。
+
+写东西要言之有物， 只说感悟只能让人心向往之而无实际作用现在持续总结emacs工作流，
+不同于vim的模态编辑， emacs上该怎么做
+目前我只有emacs的内置功能， 等到有需求了再去使用插件， 在此之前我想要找出emacs到底
+该怎么用， 而不是把习惯往emacs上套。如果想了解有哪些好用的内置模式， 可以在 awesome-emacs
+中去搜索`built-in`.
+
+*** 工作流
+代码中跳转 通过 `C-s` `C-r` 搜索， 可以Isearch 模式通过`M-s .`把光标下的单词加到
+搜索框。 标记一个单词 使用`M-@`  标记一个表达式用`C-M-@` 这些指令都是累加的
+TODO 是否做到repeat-mode 中？ 复制一行， 先删除一个再撤销， tsoding也是这样做。
+`M-h` 标记一个段落， 这对写代码提出了要求， 按照功能分组便于复制。
+
+compile 编译模式 输入编译命令后 如果错误，可以在当前窗口通过 `M-g M-n/p` 直接跳转
+另外跟tsoding学的， 编译模式用来执行命令，比方代码执行 或者查询 `rg --vimgrep`
+
+emacs  还有个优点是可以控制在不转移当前窗口的焦点的前提下操作另外的窗口
+`C-M-v` `C-M-V` 控制其他窗口的上下翻页 `C-x 4 C-o` 在另外窗口切换buffer， `C-x 4 C-f`
+在另外窗口打开文件 更多操作通过 `C-x 4 C-h h` 查看。
+
+使用  tramp + qemu   让我在mac上可以使用到完整的linux开发，调试。也不用费劲心思想在mac上
+装linux， 下载软件也很简单， 只需要 rg qmeu emacs-mac uv rust 再加上现在看从顶向下的 wireshark 
