@@ -152,6 +152,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     (setq auto-window-vscroll nil)
     (when (eq system-type 'darwin)
       (setq mac-option-modifier 'meta)
+      (mac-auto-operator-composition-mode t)
       )
     )
 
