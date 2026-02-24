@@ -142,6 +142,9 @@ https://github.com/zhangjie2012/use-package-document-cn
     (scroll-conservatively 101)
     (scroll-margin 0)
     (scroll-preserve-screen-position t)
+    (tab-width 4)
+    ;; use y-or-n-p instead of yes-or-no-p
+    (use-short-answers t)
     (Man-notify-method 'aggressive)
     (ediff-window-setup-function 'ediff-setup-windows-plain)
     (load-prefer-newer t)
@@ -151,6 +154,13 @@ https://github.com/zhangjie2012/use-package-document-cn
       (setq mac-option-modifier 'meta)
       )
     )
+
+  (use-package whitespace
+    :hook (prog-mode . whitespace-mode)
+    :custom
+    (whitespace-style '(face indentation tabs tab-mark))
+    (whitespace-display-mappings
+     '((tab-mark 9 [187 9] [92 9]))))
 
   (use-package bookmark
     :ensure nil
@@ -169,7 +179,11 @@ https://github.com/zhangjie2012/use-package-document-cn
 
   (use-package hl-line
     :ensure nil
-    :hook (after-init . global-hl-line-mode))
+    :init
+    (global-hl-line-mode -1)
+    :hook (after-change-major-mode . (lambda ()
+                                       (unless (derived-mode-p 'vterm-mode)
+                                         (hl-line-mode 1)))))
 
   (use-package so-long
     :ensure nil
@@ -267,7 +281,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     (prog-mode . flymake-mode)
     :config
     (when (version< "30" emacs-version)
-      (setq flymake-show-diagnostics-at-end-of-line 'short)))
+      (setq flymake-show-diagnostics-at-end-of-line nil)))
 
   (use-package isearch
     :ensure nil
@@ -479,18 +493,15 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package go-mode
     :ensure t)
 
+  (use-package go-ts-mode
+    :ensure nil
+    :custom
+    (go-ts-mode-indent-offset 4))
+
   (use-package eglot
     :ensure nil
     :hook
     (go-ts-mode . eglot-ensure))
-
-  (use-package vterm
-    :ensure t)
-
-  (use-package exec-path-from-shell
-  :ensure t
-  :config
-  (exec-path-from-shell-initialize))
 #+end_src
 ** theme
 #+begin_src emacs-lisp
@@ -585,15 +596,24 @@ https://github.com/zhangjie2012/use-package-document-cn
     :config
     (setq mc/list-file "～/.emacs.d/.mc-lists.el")) ; 可选：保存宏
 
-  (use-package indent-bars
-    :ensure t
-    :hook ((prog-mode) . indent-bars-mode))
+  ;; (use-package indent-bars
+  ;;   :ensure t
+  ;;   :hook ((prog-mode) . indent-bars-mode))
 
-  (use-package rime
+  (when (eq system-type 'gnu/linux)
+    (use-package rime
+      :ensure t
+      :custom
+      (default-input-method "rime")))
+
+  ;; deps : cmake libtool libvterm
+  (use-package vterm
+    :ensure t)
+
+  (use-package exec-path-from-shell
     :ensure t
-    :if (eq system-type 'gnu/linux)
-    :custom
-    (default-input-method "rime"))
+    :config
+    (exec-path-from-shell-initialize))
 #+end_src
 
 ** init.el 文件尾
