@@ -419,11 +419,19 @@ https://github.com/zhangjie2012/use-package-document-cn
         (progn
           (set-face-attribute 'default nil :height 150 :font "Operator Mono Lig Book")
           (set-fontset-font t 'han (font-spec :family "PingFang SC"))
+          (dolist (charset '(unicode symbol))
+            (set-fontset-font t charset
+                              (font-spec :family "Symbols Nerd Font")
+                              nil 'append))
           )
       (progn
         (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
         (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book")
         (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono"))
+        (dolist (charset '(unicode symbol))
+          (set-fontset-font t charset
+                            (font-spec :family "Symbols Nerd Font")
+                            nil 'append))
         )
       )
     )
@@ -502,7 +510,12 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package eglot
     :ensure nil
     :hook
-    (go-ts-mode . eglot-ensure))
+    (
+     (go-ts-mode . eglot-ensure)
+     (c-ts-mode . eglot-ensure)
+     (python-ts-mode . eglot-ensure)
+     )
+    )
 #+end_src
 ** theme
 #+begin_src emacs-lisp
