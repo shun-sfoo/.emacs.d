@@ -35,6 +35,15 @@
   patch:
   "switches/@2/reset": 1  #表示將 switcher 列表中的第3個元素的初始值重設爲狀態1
 #+end_src
+* npm 全局安装应用配置
+使用用户级 npm 全局目录
+#+begin_src bash
+  mkdir -p ~/.local/npm
+  npm config set prefix ~/.local/npm
+  # add to .bashrc
+  export PATH="$HOME/.local/npm/bin:$PATH"
+  npm install -g basedpyright
+#+end_src
 
 * use-package 使用
 https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
@@ -125,7 +134,6 @@ https://github.com/zhangjie2012/use-package-document-cn
 ** package.el setting
 #+begin_src emacs-lisp
   (use-package package
-    :unless  (eq system-type 'windows-nt)
     :config
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     (unless (bound-and-true-p package--initialized)
@@ -133,6 +141,8 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 ** default config
 #+begin_src emacs-lisp
+  (defconst *is-a-mac* (eq system-type 'darwin))
+
   (use-package emacs
     :ensure nil
     :custom
@@ -414,26 +424,30 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package faces
     :if (display-graphic-p)
     :ensure nil
+    :preface
+    (defun my/apply-font (&optional frame)
+      (with-selected-frame (or frame (selected-frame))
+        (if *is-a-mac*
+            (progn
+              (set-face-attribute 'default nil :family "Inconsolata" :height 180 :weight 'regular)
+              (set-fontset-font t 'han (font-spec :family "PingFang SC"))
+              (dolist (charset '(unicode symbol))
+                (set-fontset-font t charset
+                                  (font-spec :family "Symbols Nerd Font")
+                                  nil 'append))
+              )
+          (progn
+            (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
+            (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book")
+            (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono"))
+            (dolist (charset '(unicode symbol))
+              (set-fontset-font t charset
+                                (font-spec :family "Symbols Nerd Font")
+                                nil 'append))
+            ))
+        ))
     :config
-    (if (eq system-type 'darwin)
-        (progn
-          (set-face-attribute 'default nil :height 150 :font "Operator Mono Lig Book")
-          (set-fontset-font t 'han (font-spec :family "PingFang SC"))
-          (dolist (charset '(unicode symbol))
-            (set-fontset-font t charset
-                              (font-spec :family "Symbols Nerd Font")
-                              nil 'append))
-          )
-      (progn
-        (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
-        (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book")
-        (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono"))
-        (dolist (charset '(unicode symbol))
-          (set-fontset-font t charset
-                            (font-spec :family "Symbols Nerd Font")
-                            nil 'append))
-        )
-      )
+    (my/apply-font (selected-frame))
     )
 
   (use-package treesit
@@ -515,6 +529,9 @@ https://github.com/zhangjie2012/use-package-document-cn
      (c-ts-mode . eglot-ensure)
      (python-ts-mode . eglot-ensure)
      )
+    :config
+    (add-to-list 'eglot-server-programs
+                 '((python-mode python-ts-mode ) "basedpyright-langserver" "--stdio"))
     )
 #+end_src
 ** theme
@@ -562,13 +579,14 @@ https://github.com/zhangjie2012/use-package-document-cn
     :bind  (("C-c c" . org-capture))
     :custom
     (org-capture-templates '(("t" "TODO" entry (file+headline "~/org/gtd.org" "Tasks")
-                            "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
-                           ("r" "READING" entry (file+headline "~/org/reading.org" "Reading")
-                            "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
-                           ("b" "BLOG" entry (file+headline "~/org/blog.org" "Blog")
-                            "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
-                           ))
+                              "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                             ("r" "READING" entry (file+headline "~/org/reading.org" "Reading")
+                              "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                             ("b" "BLOG" entry (file+headline "~/org/blog.org" "Blog")
+                              "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                             ))
     )
+
 
   (use-package org-agenda
     :ensure nil
@@ -584,6 +602,32 @@ https://github.com/zhangjie2012/use-package-document-cn
     (org-agenda-finalize. org-modern-agenda)
     )
 
+  (use-package pdf-tools
+    :ensure t
+    :mode ("\\.pdf\\'" . pdf-view-mode)
+    :hook
+    (pdf-view-mode . (lambda () (display-line-numbers-mode -1)))
+    )
+
+  (use-package org
+    :ensure nil
+    :custom
+    (org-preview-latex-default-process 'dvisvgm)
+    )
+
+  (use-package auctex
+    :ensure t
+    :custom
+    (TeX-view-program-selection '((output-pdf "PDF Tools")))
+    (TeX-engine 'xetex)
+    )
+
+  (use-package cdlatex
+    :ensure t
+    :hook
+    (org-mode . org-cdlatex-mode)
+    (LaTeX-mode . cdlatex-mode)
+    )
 #+end_src
 
 ** git
@@ -608,7 +652,7 @@ https://github.com/zhangjie2012/use-package-document-cn
            ("C-c m c" . mc/edit-beginnings-of-lines)
            ("C-c m e" . mc/edit-ends-of-lines))
     :config
-    (setq mc/list-file "～/.emacs.d/.mc-lists.el")) ; 可选：保存宏
+    (setq mc/list-file "~/.emacs.d/.mc-lists.el")) ; 可选：保存宏
 
   ;; (use-package indent-bars
   ;;   :ensure t
@@ -628,6 +672,11 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure t
     :config
     (exec-path-from-shell-initialize))
+
+  (use-package disable-mouse
+    :ensure t
+    :config
+    (global-disable-mouse-mode))
 #+end_src
 
 ** init.el 文件尾
