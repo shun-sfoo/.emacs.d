@@ -44,6 +44,26 @@
   export PATH="$HOME/.local/npm/bin:$PATH"
   npm install -g basedpyright
 #+end_src
+* 备份到移动硬盘的命令
+#+begin_src bash
+  sudo rsync -ah --no-o --no-g --info=progress2 source_dir/ target_dir/
+#+end_src
+
+1. -a (归档模式)：
+核心功能：递归复制目录，并保留所有属性（权限、时间戳、软链接、属主等）。
+对硬盘友好：因为它保留了时间戳，下次运行时，rsync 能准确判断哪些文件没变过，从而跳过它们，避免对硬盘进行无谓的重复写入。
+
+--no-o：明确告诉 rsync 不要尝试更改文件所有者。
+--no-g：明确告诉 rsync 不要尝试更改文件所属组。
+
+2. -h (人类可读)：
+将文件大小显示为 K/M/G 单位，方便阅读进度。
+
+3. --info=progress2 (关键参数)：
+展示进度：这是比旧版 -P 或 --progress 更先进的参数。它会在同一行动态更新当前正在传输的文件进度（例如：file.mp4  50.00%  10MB/s），而不是为每个文件打印一堆新行刷屏。这让界面非常清爽，你能清楚看到整体速度和当前文件状态。
+
+路径末尾的 /：
+重要：/源文件夹路径/ 后面的斜杠表示“复制该文件夹里面的内容”。如果不加斜杠，会把“源文件夹”本身也拷贝到目标位置，导致层级多了一层（例如：/dest/源文件夹/...）。
 
 * use-package 使用
 https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
