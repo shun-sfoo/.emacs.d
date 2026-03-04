@@ -24,15 +24,15 @@
 #+end_src
 
 #+begin_src yaml
-  # default.custom.yaml
-  patch:
+# default.custom.yaml
+patch:
   schema_list:
     - schema: "double_pinyin_flypy"
 #+end_src
 
 #+begin_src yaml
-  # double_pinyin_flypy.custom.yaml
-  patch:
+# double_pinyin_flypy.custom.yaml
+patch:
   "switches/@2/reset": 1  #表示將 switcher 列表中的第3個元素的初始值重設爲狀態1
 #+end_src
 * npm 全局安装应用配置
@@ -485,7 +485,7 @@ https://github.com/zhangjie2012/use-package-document-cn
                  (go . ("https://github.com/tree-sitter/tree-sitter-go"))
                  (c "https://github.com/tree-sitter/tree-sitter-c")
                  (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-                 (Python . ("https://github.com/tree-sitter/tree-sitter-python"))
+                 (python . ("https://github.com/tree-sitter/tree-sitter-python"))
                  ))
         (add-to-list 'treesit-language-source-alist grammar)
         (unless (treesit-language-available-p (car grammar))
