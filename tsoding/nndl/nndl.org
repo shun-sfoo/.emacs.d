@@ -1,0 +1,260 @@
+#+TITLE: MNIST Neural Network (With Mathematical Formulation)
+#+AUTHOR: Neo
+#+OPTIONS: toc:2
+#+PROPERTY: header-args:python :results none :exports code
+
+* Sigmoid Function
+
+数学定义：
+
+\[
+\sigma(z) = \frac{1}{1 + e^{-z}}
+\]
+
+导数：
+
+\[
+\sigma'(z) = \sigma(z)(1 - \sigma(z))
+\]
+
+#+begin_src python
+import numpy as np
+import random
+from typing import List, Tuple
+
+Array = np.ndarray
+
+def sigmoid(z: Array) -> Array:
+    return 1.0 / (1.0 + np.exp(-z))
+
+def sigmoid_prime(z: Array) -> Array:
+    return sigmoid(z) * (1 - sigmoid(z))
+#+end_src
+
+
+* 网络结构定义
+
+设网络结构为：
+
+\[
+\textbf{sizes} = [n_0, n_1, \dots, n_L]
+\]
+
+其中：
+
+- 第 \( l \) 层神经元数量为 \( n_l \)
+- 权重矩阵：
+
+\[
+W^l \in \mathbb{R}^{n_l \times n_{l-1}}
+\]
+
+- 偏置向量：
+
+\[
+b^l \in \mathbb{R}^{n_l \times 1}
+\]
+
+#+begin_src python
+class Network:
+    def __init__(self, sizes: List[int]) -> None:
+        self.num_layers = len(sizes)
+        self.sizes = sizes
+
+        self.biases: List[Array] = [
+            np.random.randn(y, 1) for y in sizes[1:]
+        ]
+
+        self.weights: List[Array] = [
+            np.random.randn(y, x)
+            for x, y in zip(sizes[:-1], sizes[1:])
+        ]
+#+end_src
+
+
+* 前向传播 (Feedforward)
+
+前向传播公式：
+
+\[
+z^l = W^l a^{l-1} + b^l
+\]
+
+\[
+a^l = \sigma(z^l)
+\]
+
+其中：
+
+\[
+a^0 = x
+\]
+
+#+begin_src python
+    def feedforward(self, a: Array) -> Array:
+        for b, w in zip(self.biases, self.weights):
+            a = sigmoid(np.dot(w, a) + b)
+        return a
+#+end_src
+
+
+* 代价函数
+
+使用平方误差：
+
+\[
+C = \frac{1}{2} \| a^L - y \|^2
+\]
+
+对输出激活求导：
+
+\[
+\frac{\partial C}{\partial a^L} = a^L - y
+\]
+
+#+begin_src python
+    def cost_derivative(
+        self,
+        output_activations: Array,
+        y: Array
+    ) -> Array:
+        return output_activations - y
+#+end_src
+
+
+* 反向传播 (Backpropagation)
+
+**输出层误差**
+
+\[
+\delta^L = \frac{\partial C}{\partial a^L} \odot \sigma'(z^L)
+\]
+
+即：
+
+\[
+\delta^L = (a^L - y) \odot \sigma'(z^L)
+\]
+
+**隐藏层递推公式**
+
+\[
+\delta^l =
+\left(
+(W^{l+1})^T \delta^{l+1}
+\right)
+\odot
+\sigma'(z^l)
+\]
+
+**梯度公式**
+
+\[
+\frac{\partial C}{\partial b^l} = \delta^l
+\]
+
+\[
+\frac{\partial C}{\partial W^l}
+=
+\delta^l (a^{l-1})^T
+\]
+
+#+begin_src python
+    def backprop(
+        self,
+        x: Array,
+        y: Array
+    ) -> Tuple[List[Array], List[Array]]:
+
+        nabla_b = [np.zeros(b.shape) for b in self.biases]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+
+        activation = x
+        activations = [x]
+        zs = []
+
+        # forward pass
+        for b, w in zip(self.biases, self.weights):
+            z = np.dot(w, activation) + b
+            zs.append(z)
+            activation = sigmoid(z)
+            activations.append(activation)
+
+        # output layer error
+        delta = (
+            self.cost_derivative(activations[-1], y)
+            * sigmoid_prime(zs[-1])
+        )
+
+        nabla_b[-1] = delta
+        nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+
+        # backward pass
+        for l in range(2, self.num_layers):
+            z = zs[-l]
+            sp = sigmoid_prime(z)
+
+            delta = (
+                np.dot(self.weights[-l + 1].transpose(), delta)
+                * sp
+            )
+
+            nabla_b[-l] = delta
+            nabla_w[-l] = np.dot(
+                delta,
+                activations[-l - 1].transpose()
+            )
+
+        return nabla_b, nabla_w
+#+end_src
+
+
+* Mini-batch 梯度下降
+
+对于 mini-batch \( B \)：
+
+\[
+\nabla_W C =
+\frac{1}{|B|}
+\sum_{x \in B}
+\nabla_W C_x
+\]
+
+\[
+W \leftarrow W - \eta \nabla_W C
+\]
+
+\[
+b \leftarrow b - \eta \nabla_b C
+\]
+
+#+begin_src python
+    def update_mini_batch(
+        self,
+        mini_batch: List[Tuple[Array, Array]],
+        eta: float
+    ) -> None:
+
+        nabla_b = [np.zeros(b.shape) for b in self.biases]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+
+        for x, y in mini_batch:
+            delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+
+            nabla_b = [
+                nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)
+            ]
+            nabla_w = [
+                nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)
+            ]
+
+        self.weights = [
+            w - (eta / len(mini_batch)) * nw
+            for w, nw in zip(self.weights, nabla_w)
+        ]
+
+        self.biases = [
+            b - (eta / len(mini_batch)) * nb
+            for b, nb in zip(self.biases, nabla_b)
+        ]
+#+end_src

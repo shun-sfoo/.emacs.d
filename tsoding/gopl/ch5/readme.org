@@ -1,0 +1,27 @@
+* 第五章
+
+** 命名返回值
+
+go语言设计中，有独特的命名返回值设计，凡特别的设计必有其独特用法，
+用于解决其特定问题。这点可以和gpt对话询问。
+1. 返回值自文档
+2. 简化return语句 裸return
+3. 配合defer做收尾工作 错误返回后先存放进「返回槽」 而后再运行defer，修改返回槽的结果
+   
+长函数不适用
+
+#+begin_src go
+  func ParseData(data []byte) (result string, err error) {
+  	defer func() {
+  		if r := recovery(); r != nil {
+  			err = fmt.Errorf("panic recovered: %v", r)
+  		}
+  	}()
+
+  	if len(data) == 0 {
+  		panic("empty data")
+  	}
+  	result = string(data)
+  	return
+  }
+#+end_src
