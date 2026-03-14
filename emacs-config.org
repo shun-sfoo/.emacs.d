@@ -293,20 +293,19 @@ https://github.com/zhangjie2012/use-package-document-cn
 
   (use-package repeat
     :ensure nil
-    :hook
-    (after-init . repeat-mode)
-    ;; :config
-    ;; (defvar neo/struct-repeat-map
-    ;;   (let ((map (make-sparse-keymap)))
-    ;;     (define-key map (kbd "C-M-f") #'forward-sexp)
-    ;;     map
-    ;;     )
-    ;;   "structed map"
-    ;;   )
-    ;; (dolist (cmd '(forward-sexp))
-    ;;   (put cmd 'repeat-map 'neo/struct-repeat-map)
-    ;;   )
-    )
+    :hook (after-init . repeat-mode)
+    :config
+    ;; 1. 定义专属的错误跳转 map
+    (defvar eglot-error-repeat-map
+      (let ((map (make-sparse-keymap)))
+        (define-key map "n" #'flymake-goto-next-error)
+        (define-key map "p" #'flymake-goto-prev-error)
+        map)
+      "Keymap to repeat flymake error navigation.")
+
+    ;; 2. 将命令关联到该 map
+    (put #'flymake-goto-next-error 'repeat-map 'eglot-error-repeat-map)
+    (put #'flymake-goto-prev-error 'repeat-map 'eglot-error-repeat-map))
 
   ;; (use-package  startup
   ;;   :ensure nil
@@ -527,6 +526,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
     (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
     (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
+                                          ;
     (add-to-list 'major-mode-remap-alist
                  '(c-or-c++-mode . c-or-c++-ts-mode))
     (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
@@ -538,11 +538,37 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure nil
     :hook
     (prog-mode . eglot-ensure)
+    :bind
+    (:map eglot-mode-map
+          ("C-c l l" . eglot-code-action-organize-imports)
+          ("C-c l q" . eglot-code-action-quickfix)
+          ("C-c l i" . eglot-find-implementation)
+          ;; --- [核心操作] ---
+          ("C-c l r" . eglot-rename)            ; Rename (重命名)
+          ("C-c l a" . eglot-code-actions)      ; Action (代码行为/修复)
+          ("C-c l f" . eglot-format)            ; Format (格式化)
+          ("C-c l o" . eglot-code-action-organize-imports) ; Optimize (整理导入)
+
+          ;; --- [查看与跳转] ---
+          ("C-c l h" . eldoc)                   ; Help (查看文档/签名)
+          ("C-c l i" . eglot-find-implementation) ; Implementation (跳转实现)
+          ("C-c l t" . eglot-find-declaration)    ; Type/Decl (跳转声明)
+
+          ;; --- [管理与调试] ---
+          ("C-c l s" . eglot-reconnect)         ; Start/Restart (重连)
+          ("C-c l q" . eglot-shutdown)          ; Quit (关闭服务器)
+          ("C-c l e" . eglot-events-buffer)     ; Events (查看通信日志)
+          ("C-c l w" . eglot-stderr-buffer)     ; Watch (查看错误日志)
+          ("C-c l p" . flymake-goto-prev-error)
+          ("C-c l n" . flymake-goto-next-error)
+          )
     :config
     (add-to-list 'eglot-server-programs
                  '(python-base-mode . ("rass" "basedruff")))
     (add-to-list 'eglot-server-programs
                  '(js-base-mode . ("rass" "--" "typescript-language-server" "--stdio" "--" "biome" "lsp-proxy")))
+    (add-to-list 'eglot-server-programs
+                 '(html-ts-mode . ("biome" "lsp-proxy")))
     )
 
   (use-package combobulate
