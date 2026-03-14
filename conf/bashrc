@@ -1,0 +1,24 @@
+# ---------------------------------------------------------
+# Bash History 增强设置
+# ---------------------------------------------------------
+
+# 1. 扩容：设置内存和磁盘中保存的命令条数
+export HISTSIZE=10000
+export HISTFILESIZE=20000
+
+# 2. 格式：增加时间戳，方便追溯（格式：2026-03-15 12:30:05）
+export HISTTIMEFORMAT="%F %T  "
+
+# 3. 过滤：忽略重复命令、忽略以空格开头的敏感命令
+export HISTCONTROL=ignoreboth
+
+# 4. 追加：退出终端时追加历史而非覆盖
+shopt -s histappend
+
+# 5. 实时同步：每执行完一个命令就立即写入文件，并重新读取
+# 这样你在窗口 A 执行的命令，在窗口 B 立即就能通过方向键搜到
+export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
+
+eval "$(starship init bash)"
+
+eval "$(mcfly init bash)"
