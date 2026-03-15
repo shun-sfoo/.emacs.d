@@ -67,6 +67,7 @@ patch:
   uv add package
   uv run main.py
 * 备份到移动硬盘的命令
+
 #+begin_src bash
   sudo rsync -ah --no-o --no-g --info=progress2 source_dir/ target_dir/
 #+end_src
@@ -88,6 +89,7 @@ patch:
 重要：/源文件夹路径/ 后面的斜杠表示“复制该文件夹里面的内容”。如果不加斜杠，会把“源文件夹”本身也拷贝到目标位置，导致层级多了一层（例如：/dest/源文件夹/...）。
 
 * use-package 使用
+
 https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
 https://github.com/zhangjie2012/use-package-document-cn
 ** 代码展开
@@ -526,7 +528,6 @@ https://github.com/zhangjie2012/use-package-document-cn
     (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
     (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
     (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
-                                          ;
     (add-to-list 'major-mode-remap-alist
                  '(c-or-c++-mode . c-or-c++-ts-mode))
     (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
@@ -585,7 +586,7 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package c-ts-mode
     :ensure nil
     :custom
-    (c-ts-mode-indent-offset 4))
+    (c-ts-mode-indent-offset 2))
 
   (use-package go-ts-mode
     :ensure nil
@@ -737,6 +738,19 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure t
     :config
     (global-disable-mouse-mode))
+
+  (use-package crux
+    :ensure t
+    :bind
+    (
+     ([remap kill-line] . crux-smart-kill-line)
+     ([remap move-beginning-of-line] . crux-move-beginning-of-line)
+     ([remap keyboard-quit] . crux-keyboard-quit-dwim)
+     ("C-c o" . crux-open-with)
+     ([(shift return)] . crux-smart-open-line)
+     ("s-r" . crux-recentf-find-file)
+     ("C-<backspace>" . crux-kill-line-backwards))
+    )
 #+end_src
 
 ** init.el 文件尾
