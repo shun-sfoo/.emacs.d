@@ -748,7 +748,8 @@ https://github.com/zhangjie2012/use-package-document-cn
      ([remap keyboard-quit] . crux-keyboard-quit-dwim)
      ("C-c o" . crux-open-with)
      ([(shift return)] . crux-smart-open-line)
-     ("s-r" . crux-recentf-find-file)
+     ("C-S-<return>" . crux-smart-open-line-above)
+     ("C-c f" . crux-recentf-find-file)
      ("C-<backspace>" . crux-kill-line-backwards))
     )
 #+end_src
