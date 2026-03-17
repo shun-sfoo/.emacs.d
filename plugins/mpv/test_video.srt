@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:02,000
+Hello, welcome to the test video!
+
+2
+00:00:02,500 --> 00:00:04,500
+This is a subtitle display test.
+
+3
+00:00:05,000 --> 00:00:07,000
+The subtitles should sync with video.
+
+4
+00:00:07,500 --> 00:00:10,000
+Emacs mpv module is working correctly!
+
+5
+00:00:10,500 --> 00:00:13,000
+Notice how the highlight follows the playback time.
+
+6
+00:00:13,500 --> 00:00:16,000
+You can also seek through the video.
+
+7
+00:00:16,500 --> 00:00:19,000
+The subtitles will update accordingly.
+
+8
+00:00:19,500 --> 00:00:22,000
+This is the end of the test video.
+
+9
+00:00:22,500 --> 00:00:25,000
+Thanks for watching!
