@@ -20,8 +20,8 @@ tramp
 .mc-lists.el
 projects
 org-persist
-tree-sitter
 init.el
 early-init.el
 tsoding/build/
 nob
+plugins/*/target
