@@ -764,6 +764,9 @@ https://github.com/zhangjie2012/use-package-document-cn
      ("C-c f" . crux-recentf-find-file)
      ("C-<backspace>" . crux-kill-line-backwards))
     )
+
+  (use-package markdown-mode
+    :ensure t)
 #+end_src
 
 ** init.el 文件尾

@@ -1,0 +1,28 @@
+* ai 工具
+
+** 翻译ytb视频
+
+1. 模型选择
+   Qwen/Qwen2.5-14B-Instruct-GGUF Q6_K
+
+2. 使用faster-whisper
+   pip install faster-whisper
+ # 开启 CUDA 编译安装 llama-cpp-python (极度重要，否则会用 CPU 龟速跑)
+CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python
+
+gemini prompt
+现在综合一下， 使用faster-whisper 自动下载 large-v3-tubro 然后把我 /home/neo/Videos/ytb/tsoding/machine_learning_in_c 下的多个视频提取字幕文件
+并使用llama-cpp-python 翻译 tsoding 的视频，最后生成中英文字幕srt文件， 要求英文在中文上面 我的翻译模型文件在 /home/neo/models/qwen2.5-coder-14b-instruct-q6_k.gguf
+给函数加上注释，并且生成的python代码尽量满足basedpyright规范
+
+帮我改一下，使用本地的whisper.cpp 和本地的 largv3-tubor 模型
+
+python 版本为3.13 优化
+生成完整代码
+
+为什么会生成 bilingual.srt
+   改成跳过 生成en.srt步骤， 而不是跳过翻译的流程
+
+   还是有llama_context: n_ctx_per_seq (8192) < n_ctx_train (131072) -- the full capacity of the model will not be utilized 的提示， 并且没有翻译成中文，显卡占用率达到了  96%
+
+   

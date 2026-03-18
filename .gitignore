@@ -25,3 +25,6 @@ early-init.el
 tsoding/build/
 nob
 plugins/*/target
+lisp-site
+rime
+*.elc

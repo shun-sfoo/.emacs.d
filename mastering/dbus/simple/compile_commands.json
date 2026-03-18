@@ -1,0 +1,17 @@
+[
+  {
+    "file": "client_simple.cpp",
+    "arguments": [
+      "g++",
+      "-std=c++17",
+      "-I/usr/include/dbus-1.0",
+      "-I/usr/lib/dbus-1.0/include",
+      "-Wall",
+      "-o",
+      "client_simple",
+      "client_simple.cpp"
+    ],
+    "directory": "/home/neo/.emacs.d/mastering/dbus/simple",
+    "output": "client_simple"
+  }
+]

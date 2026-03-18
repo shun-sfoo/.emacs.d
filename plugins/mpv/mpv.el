@@ -1,12 +1,16 @@
-;;; mpv-subtitle.el --- Subtitle display and sync for mpv -*- lexical-binding: t -*-
+;;; mpv.el --- Control mpv and display subtitles -*- lexical-binding: t -*-
 
 (require 'xml)
 (require 'subr-x)
 (require 'cl-lib)
 
+(defvar mpv-module-path
+  (expand-file-name "target/debug/libmpv.so" (file-name-directory (or load-file-name buffer-file-name)))
+  "Path to the mpv module .so file.")
+
 (defun mpv-load-module ()
   "Load the mpv module."
-  (load "/home/neo/.emacs.d/plugins/mpv/target/debug/libmpv.so"))
+  (load mpv-module-path))
 
 (defvar mpv-subtitle-timer nil
   "Timer for subtitle highlight update.")
@@ -16,6 +20,9 @@
 
 (defvar mpv-subtitle-entries nil
   "List of parsed subtitle entries.")
+
+(defvar mpv-subtitle-frame nil
+  "Frame for displaying subtitles.")
 
 (defvar-local mpv-subtitle-video-path nil
   "Path to the currently playing video.")
@@ -38,25 +45,34 @@ Each entry is: (start-time end-time text)"
     (nreverse entries)))
 
 (defun mpv-load-subtitle-file (srt-path)
-  "Load SRT file from SRT-PATH and display in subtitle buffer."
-  (let ((buf (get-buffer-create "*MPV Subtitle*"))
-        (entries (with-temp-buffer
-                   (insert-file-contents srt-path)
-                   (mpv-parse-srt-from-string (buffer-string)))))
+  "Load SRT file from SRT-PATH and display in subtitle frame."
+  (let* ((entries (with-temp-buffer
+                    (insert-file-contents srt-path)
+                    (mpv-parse-srt-from-string (buffer-string))))
+         (buf-name " *MPV Subtitle*"))
     (setq mpv-subtitle-entries entries)
     (setq mpv-subtitle-last-index -1)
-    (with-current-buffer buf
-      (setq buffer-read-only nil)
-      (erase-buffer)
-      (mpv-subtitle-mode)
-      (dolist (entry entries)
-        (let ((start (car entry))
-              (text (caddr entry)))
-          (insert (format "[%05.1f] %s\n" start text))))
-      (setq buffer-read-only t)
-      (setq mpv-subtitle-current-index nil))
-    (display-buffer buf)
-    buf))
+    (when (and mpv-subtitle-frame (frame-live-p mpv-subtitle-frame))
+      (delete-frame mpv-subtitle-frame))
+    (let ((buf (get-buffer-create buf-name)))
+      (with-current-buffer buf
+        (setq buffer-read-only nil)
+        (erase-buffer)
+        (mpv-subtitle-mode)
+        (dolist (entry entries)
+          (let ((start (car entry))
+                (text (caddr entry)))
+            (insert (format "[%05.1f] %s\n" start text))))
+        (setq buffer-read-only t)
+        (setq mpv-subtitle-current-index nil))
+      (setq mpv-subtitle-frame
+            (make-frame `((name . "MPV Subtitle")
+                          (minibuffer . nil)
+                          (auto-raise . t)
+                          (frame-resize-pixelwise . t))))
+      (select-frame mpv-subtitle-frame)
+      (switch-to-buffer buf))
+    mpv-subtitle-frame))
 
 (defun mpv-parse-srt-from-string (content)
   "Parse raw SRT string CONTENT into a list of entries.
@@ -104,7 +120,7 @@ Each entry: (start-time end-time text)"
 (defun mpv-update-subtitle-highlight ()
   "Update subtitle highlight based on current playback time."
   (let ((time (ignore-errors (mpv-get-time))))
-    (when (and time mpv-subtitle-entries (get-buffer "*MPV Subtitle*"))
+    (when (and time mpv-subtitle-entries mpv-subtitle-frame (frame-live-p mpv-subtitle-frame))
       (let* ((matches (cl-loop for e in mpv-subtitle-entries
                                for i from 0
                                when (and (<= (car e) time) (< time (cadr e)))
@@ -112,7 +128,7 @@ Each entry: (start-time end-time text)"
              (idx (car matches)))
         (when (and idx (numberp idx) (/= idx mpv-subtitle-last-index))
           (setq mpv-subtitle-last-index idx)
-          (with-current-buffer "*MPV Subtitle*"
+          (with-current-buffer (window-buffer (frame-first-window mpv-subtitle-frame))
             (remove-overlays (point-min) (point-max) 'mpv-subtitle-highlight t)
             (goto-char (point-min))
             (forward-line idx)
@@ -130,14 +146,18 @@ Each entry: (start-time end-time text)"
   "Stop auto-update timer."
   (when mpv-subtitle-timer
     (cancel-timer mpv-subtitle-timer)
-    (setq mpv-subtitle-timer nil)))
+    (setq mpv-subtitle-timer nil))
+  (when (and mpv-subtitle-frame (frame-live-p mpv-subtitle-frame))
+    (delete-frame mpv-subtitle-frame)
+    (setq mpv-subtitle-frame nil)))
 
 (defun mpv-play-with-subtitle (video-path)
   "Play VIDEO-PATH and load corresponding subtitle if exists."
+  (interactive "fVideo file: ")
   (condition-case err
       (progn
         (or (fboundp 'mpv-get-time)
-            (load "/home/neo/.emacs.d/plugins/mpv/target/debug/libmpv.so"))
+            (mpv-load-module))
         (mpv-play video-path)
         (setq mpv-subtitle-video-path video-path)
         (let ((srt-path (concat (file-name-sans-extension video-path) ".srt")))
@@ -148,6 +168,6 @@ Each entry: (start-time end-time text)"
             (message "No subtitle file found for %s" video-path))))
     (error (message "Error: %s" err))))
 
-(provide 'mpv-subtitle)
+(provide 'mpv)
 
-;;; mpv-subtitle.el ends here
+;;; mpv.el ends here
