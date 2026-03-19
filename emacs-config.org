@@ -182,6 +182,16 @@ https://github.com/zhangjie2012/use-package-document-cn
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     (unless (bound-and-true-p package--initialized)
       (package-initialize)))
+
+  (use-package compile-angel
+    :ensure t
+    :demand t
+    :config
+    (setq package-native-compile nil)
+    (setq compile-angel-verbose t)
+    (push "/init.el" compile-angel-excluded-files)
+    (push "/early-init.el" compile-angel-excluded-files)
+    (compile-angel-on-load-mode 1))
 #+end_src
 ** default config
 #+begin_src emacs-lisp
@@ -612,12 +622,9 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package ef-themes
     :ensure t
     :init
-    (mapc #'disable-theme custom-enabled-themes)
+    (ef-themes-take-over-modus-themes-mode 1)
     :config
-    (load-theme 'ef-dream t)
-    )
-
-
+    (modus-themes-load-theme 'ef-dream))
 #+end_src
 ** enhancing elisp
 #+begin_src emacs-lisp
@@ -767,6 +774,18 @@ https://github.com/zhangjie2012/use-package-document-cn
 
   (use-package markdown-mode
     :ensure t)
+
+  (use-package auto-package-update
+    :ensure t
+    :custom
+    (auto-package-update-interval 7)
+    (auto-package-update-hide-results t)
+    (auto-package-update-delete-old-versions t)
+    :config
+    (auto-package-update-maybe)
+    (auto-package-update-at-time "10:00"))
+
+
 #+end_src
 
 ** init.el 文件尾

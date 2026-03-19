@@ -28,3 +28,4 @@ plugins/*/target
 lisp-site
 rime
 *.elc
+.last-package-update-day
