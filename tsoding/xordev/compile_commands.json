@@ -1,0 +1,16 @@
+[
+  {
+    "file": "plasma_mt.cpp",
+    "arguments": [
+      "c++",
+      "-O3",
+      "-std=c++23",
+      "-pthread",
+      "-o",
+      "plasma_mt",
+      "plasma_mt.cpp"
+    ],
+    "directory": "/home/neo/.emacs.d/tsoding/xordev",
+    "output": "plasma_mt"
+  }
+]

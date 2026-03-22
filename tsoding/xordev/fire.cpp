@@ -1,0 +1,1 @@
+//vec2 p=(FC.xy*2.-r)/r.y,R;p*=1.-vec2(.5*p.y,.5/(1.+p*p));p.y-=t;float F=11.,N,d;for(R.x=F;F<50.;F*=1.2)p+=.4*sin(F*dot(p,sin(++R))+6.*t)*cos(R)/F;N=snoise2D(p*4.);d=length(p+vec2(0,t+.5))/.3-++N;N+=snoise2D(p*8.);o=tanh(++N/(.5-.1*N+max(d/.1,-d)*abs(d)/.3)/vec4(1,3,9,1));

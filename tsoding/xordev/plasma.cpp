@@ -1,4 +1,4 @@
-// $ cc -O3 -o plasma plasma.gcpp -lm
+// $ cc -O3 -o plasma plasma.cpp -lm
 // $ ./plasma
 // $ ffmpeg -i output-%03d.ppm -r 60 output.mp4
 
@@ -74,8 +74,8 @@ vec4 operator/(const vec4 &a, const vec4 &b) {
 
 int main() {
   char buf[256];
-  for (int i = 0; i < 240; ++i) {
-    snprintf(buf, sizeof(buf), "output-%03d.ppm", i);
+  for (int frame = 0; frame < 240; ++frame) {
+    snprintf(buf, sizeof(buf), "output-%03d.ppm", frame);
     const char *output_path = buf;
     FILE *f = fopen(output_path, "wb");
     int w = 16 * 60;
@@ -84,7 +84,7 @@ int main() {
     fprintf(f, "%d %d\n", w, h);
     fprintf(f, "255\n");
     vec2 r = {(float)w, (float)h};
-    float t = ((float)i / 240) * 2 * M_PI;
+    float t = ((float)frame / 240) * 2 * M_PI;
     for (int y = 0; y < h; ++y) {
       for (int x = 0; x < w; ++x) {
         vec4 o;
@@ -103,10 +103,10 @@ int main() {
       }
     }
     fclose(f);
-    printf("Generated %s (%3d/%3d)\n", output_path, i + 1, 240);
+    printf("Generated %s (%3d/%3d)\n", output_path, frame + 1, 240);
   }
 
-  system("ffmpeg -i output-%03d.ppm -r 60 output.mp4");
-  system("rm *.ppm");
+  //system("ffmpeg -i output-%03d.ppm -r 60 output.mp4");
+  //system("rm *.ppm");
   return 0;
 }
