@@ -1,0 +1,15 @@
+* find c power
+
+** yaml
+libyaml 为 C数据对象所实现的yaml 格式输入机制，采用了事件模型
+输出前需要准备一个事件， 然后发送。发送的对象是一个状态机
+*yaml_emitter_t*。
+
+写入内容的步骤为
+
+全局: emitter_init ->  yaml_stream_start  -> 多个节点 -> yaml_stream_end -> emitter_delete
+
+yaml_event 单线程中可以全局复用 最后 yaml_event_delete
+
+多个节点: doc_start -> emit_start  -> content -> emit_end -> doc_end
+
