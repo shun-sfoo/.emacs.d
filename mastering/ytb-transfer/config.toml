@@ -1,0 +1,12 @@
+[whisper]
+cli = "/home/neo/Development/whisper.cpp/build/bin/whisper-cli"
+model = "/home/neo/models/ggml-large-v3-turbo.bin"
+language = "en"
+
+[ollama]
+api = "http://localhost:11434/api/generate"
+model = "qwen3.5:9b"
+batch_size = 5
+
+[playlist]
+url = "https://www.youtube.com/watch?v=Xdbk1Pr5WXU&list=PLpM-Dvs8t0Vak1rrE2NJn8XYEJ5M7-BqT"
