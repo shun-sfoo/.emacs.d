@@ -1,0 +1,10 @@
+* generate
+
+ffmpeg -f lavfi -i "anoisesrc=d=10:c=pink:r=44100" \
+       -f lavfi -i "sine=f=100:d=10" \
+       -filter_complex "[0:a][1:a]amix=inputs=2" \
+       -c:a libvorbis -ac 2 -q:a 6 \
+       complex_spectrum.ogg       
+** check
+
+ffplay -i visualization_test.ogg -vf "showspectrum=s=1280x720:mode=combined:color=magma"
