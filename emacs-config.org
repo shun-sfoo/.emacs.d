@@ -175,7 +175,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 
 #+END_SRC
 
-** COMMENT package.el setting
+** package.el setting
 #+begin_src emacs-lisp
   (use-package package
     :config
@@ -582,7 +582,8 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 
   (use-package combobulate
-    :load-path "~/.emacs.d/lisp-site/combobulate"
+    ;;:load-path "~/.emacs.d/lisp-site/combobulate"
+    :vc (:url "https://github.com/mickeynp/combobulate" :branch "main")
     :custom
     ;; You can customize Combobulate's key prefix here.
     ;; Note that you may have to restart Emacs for this to take effect!
@@ -700,16 +701,6 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 #+end_src
 
-** git
-
-#+begin_src elisp
-  (use-package diff-hl
-    :ensure t)
-
-  (use-package magit
-    :ensure t)
-#+end_src
-
 ** editor
 
 #+begin_src elisp
@@ -723,10 +714,6 @@ https://github.com/zhangjie2012/use-package-document-cn
            ("C-c m e" . mc/edit-ends-of-lines))
     :config
     (setq mc/list-file "~/.emacs.d/.mc-lists.el")) ; 可选：保存宏
-
-  ;; (use-package indent-bars
-  ;;   :ensure t
-  ;;   :hook ((prog-mode) . indent-bars-mode))
 
   (when (eq system-type 'gnu/linux)
     (use-package rime
@@ -747,20 +734,6 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure t
     :config
     (global-disable-mouse-mode))
-
-  (use-package crux
-    :ensure t
-    :bind
-    (
-     ([remap kill-line] . crux-smart-kill-line)
-     ([remap move-beginning-of-line] . crux-move-beginning-of-line)
-     ([remap keyboard-quit] . crux-keyboard-quit-dwim)
-     ("C-c o" . crux-open-with)
-     ([(shift return)] . crux-smart-open-line)
-     ("C-S-<return>" . crux-smart-open-line-above)
-     ("C-c f" . crux-recentf-find-file)
-     ("C-<backspace>" . crux-kill-line-backwards))
-    )
 
   (use-package markdown-mode
     :ensure t)
