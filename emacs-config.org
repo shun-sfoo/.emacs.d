@@ -498,124 +498,6 @@ https://github.com/zhangjie2012/use-package-document-cn
     (my/apply-font (selected-frame))
     )
 
-  (use-package treesit
-    :ensure nil
-    :custom
-    (treesit-font-lock-level 4)
-    :preface
-    (defun mp-setup-install-grammars ()
-      "Install Tree-sitter grammars if they are absent."
-      (interactive)
-      (dolist (grammar
-               '(
-                 (bash . ("https://github.com/tree-sitter/tree-sitter-bash"))
-                 (c .  ("https://github.com/tree-sitter/tree-sitter-c"))
-                 (cpp . ("https://github.com/tree-sitter/tree-sitter-cpp"))
-                 (css . ("https://github.com/tree-sitter/tree-sitter-css"))
-                 (go . ("https://github.com/tree-sitter/tree-sitter-go"))
-                 (html . ("https://github.com/tree-sitter/tree-sitter-html"))
-                 (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"))
-                 (json . ("https://github.com/tree-sitter/tree-sitter-json"))
-                 (python . ("https://github.com/tree-sitter/tree-sitter-python"))
-                 (rust . ("https://github.com/tree-sitter/tree-sitter-rust"))
-                 (toml . ("https://github.com/ikatyang/tree-sitter-toml"))
-                 ))
-        (add-to-list 'treesit-language-source-alist grammar)
-        (unless (treesit-language-available-p (car grammar))
-          (treesit-install-language-grammar (car grammar)))))
-    :config
-    (mp-setup-install-grammars)
-    (setq auto-mode-alist
-          (append '(
-                    ("\\.js\\'"  . js-ts-mode)
-                    ("\\.html\\'"  . html-ts-mode)
-                    ("\\.jsonc\\'" . json-ts-mode)
-                    ("\\.toml\\'" . toml-ts-mode)
-                    ("\\.rs\\'" . rust-ts-mode)
-                    )
-                  auto-mode-alist))
-    (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
-    (add-to-list 'major-mode-remap-alist
-                 '(c-or-c++-mode . c-or-c++-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(css-mode . css-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
-    )
-
-  (use-package eglot
-    :ensure nil
-    :hook
-    (prog-mode . eglot-ensure)
-    :bind
-    (:map eglot-mode-map
-          ("C-c l l" . eglot-code-action-organize-imports)
-          ("C-c l q" . eglot-code-action-quickfix)
-          ("C-c l i" . eglot-find-implementation)
-          ;; --- [核心操作] ---
-          ("C-c l r" . eglot-rename)            ; Rename (重命名)
-          ("C-c l a" . eglot-code-actions)      ; Action (代码行为/修复)
-          ("C-c l f" . eglot-format)            ; Format (格式化)
-          ("C-c l o" . eglot-code-action-organize-imports) ; Optimize (整理导入)
-
-          ;; --- [查看与跳转] ---
-          ("C-c l h" . eldoc)                   ; Help (查看文档/签名)
-          ("C-c l i" . eglot-find-implementation) ; Implementation (跳转实现)
-          ("C-c l t" . eglot-find-declaration)    ; Type/Decl (跳转声明)
-
-          ;; --- [管理与调试] ---
-          ("C-c l s" . eglot-reconnect)         ; Start/Restart (重连)
-          ("C-c l q" . eglot-shutdown)          ; Quit (关闭服务器)
-          ("C-c l e" . eglot-events-buffer)     ; Events (查看通信日志)
-          ("C-c l w" . eglot-stderr-buffer)     ; Watch (查看错误日志)
-          ("C-c l p" . flymake-goto-prev-error)
-          ("C-c l n" . flymake-goto-next-error)
-          )
-    :config
-    (add-to-list 'eglot-server-programs
-                 '(python-base-mode . ("rass" "basedruff")))
-    (add-to-list 'eglot-server-programs
-                 '(js-base-mode . ("rass" "--" "typescript-language-server" "--stdio" "--" "biome" "lsp-proxy")))
-    (add-to-list 'eglot-server-programs
-                 '(html-ts-mode . ("biome" "lsp-proxy")))
-    )
-
-  (use-package combobulate
-    ;;:load-path "~/.emacs.d/lisp-site/combobulate"
-    :vc (:url "https://github.com/mickeynp/combobulate" :branch "main")
-    :custom
-    ;; You can customize Combobulate's key prefix here.
-    ;; Note that you may have to restart Emacs for this to take effect!
-    (combobulate-key-prefix "C-c o")
-    :hook (
-           (prog-mode . combobulate-mode)
-           (toml-ts-mode . combobulate-mode)
-           )
-    ;; Amend this to the directory where you keep Combobulate's source
-    ;; code.
-    )
-
-  (use-package c-ts-mode
-    :ensure nil
-    :custom
-    (c-ts-mode-indent-offset 2))
-
-  (use-package go-ts-mode
-    :ensure nil
-    :custom
-    (go-ts-mode-indent-offset 4))
-
-
-#+end_src
-** theme
-#+begin_src emacs-lisp
-  (use-package ef-themes
-    :ensure t
-    :init
-    (ef-themes-take-over-modus-themes-mode 1)
-    :config
-    (modus-themes-load-theme 'ef-dream))
 #+end_src
 ** enhancing elisp
 #+begin_src emacs-lisp
@@ -756,12 +638,151 @@ https://github.com/zhangjie2012/use-package-document-cn
                          ("https://hnrss.org/frontpage" Hacker News: Front Page)
                          ))
     )
+
+
+  (use-package crux
+    :ensure t
+    :bind
+    (
+     ([remap kill-line] . crux-smart-kill-line)
+     ([remap move-beginning-of-line] . crux-move-beginning-of-line)
+     ([remap keyboard-quit] . crux-keyboard-quit-dwim)
+     ("C-c o" . crux-open-with)
+     ([(shift return)] . crux-smart-open-line)
+     ("C-S-<return>" . crux-smart-open-line-above)
+     ("C-<backspace>" . crux-kill-line-backwards))
+    )
+
+  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+  (load-theme 'gruber-neo-darker t)
 #+end_src
 
+** programming
+#+begin_src elisp
+  (use-package eglot
+    :ensure nil
+    :hook
+    (prog-mode . eglot-ensure)
+    :bind
+    (:map eglot-mode-map
+          ("C-c l l" . eglot-code-action-organize-imports)
+          ("C-c l q" . eglot-code-action-quickfix)
+          ("C-c l i" . eglot-find-implementation)
+          ;; --- [核心操作] ---
+          ("C-c l r" . eglot-rename)            ; Rename (重命名)
+          ("C-c l a" . eglot-code-actions)      ; Action (代码行为/修复)
+          ("C-c l f" . eglot-format)            ; Format (格式化)
+          ("C-c l o" . eglot-code-action-organize-imports) ; Optimize (整理导入)
+
+          ;; --- [查看与跳转] ---
+          ("C-c l h" . eldoc)                   ; Help (查看文档/签名)
+          ("C-c l i" . eglot-find-implementation) ; Implementation (跳转实现)
+          ("C-c l t" . eglot-find-declaration)    ; Type/Decl (跳转声明)
+
+          ;; --- [管理与调试] ---
+          ("C-c l s" . eglot-reconnect)         ; Start/Restart (重连)
+          ("C-c l q" . eglot-shutdown)          ; Quit (关闭服务器)
+          ("C-c l e" . eglot-events-buffer)     ; Events (查看通信日志)
+          ("C-c l w" . eglot-stderr-buffer)     ; Watch (查看错误日志)
+          ("C-c l p" . flymake-goto-prev-error)
+          ("C-c l n" . flymake-goto-next-error)
+          )
+    :config
+    (add-to-list 'eglot-server-programs
+                 '(python-base-mode . ("rass" "basedruff")))
+    (add-to-list 'eglot-server-programs
+                 '(js-base-mode . ("rass" "--" "typescript-language-server" "--stdio" "--" "biome" "lsp-proxy")))
+    (add-to-list 'eglot-server-programs
+                 '(html-ts-mode . ("biome" "lsp-proxy")))
+    )
+
+  (use-package combobulate
+    ;;:load-path "~/.emacs.d/lisp-site/combobulate"
+    :vc (:url "https://github.com/mickeynp/combobulate" :branch "main")
+    :custom
+    (combobulate-key-prefix "C-c o")
+    :hook (
+           (prog-mode . combobulate-mode)
+           (toml-ts-mode . combobulate-mode)
+           )
+    )
+
+  (use-package treesit
+    :ensure nil
+    :custom
+    (treesit-font-lock-level 4)
+    :preface
+    (defun mp-setup-install-grammars ()
+      "Install Tree-sitter grammars if they are absent."
+      (interactive)
+      (dolist (grammar
+               '(
+                 (bash . ("https://github.com/tree-sitter/tree-sitter-bash"))
+                 (c .  ("https://github.com/tree-sitter/tree-sitter-c"))
+                 (cpp . ("https://github.com/tree-sitter/tree-sitter-cpp"))
+                 (css . ("https://github.com/tree-sitter/tree-sitter-css"))
+                 (go . ("https://github.com/tree-sitter/tree-sitter-go"))
+                 (html . ("https://github.com/tree-sitter/tree-sitter-html"))
+                 (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"))
+                 (json . ("https://github.com/tree-sitter/tree-sitter-json"))
+                 (python . ("https://github.com/tree-sitter/tree-sitter-python"))
+                 (rust . ("https://github.com/tree-sitter/tree-sitter-rust"))
+                 (toml . ("https://github.com/ikatyang/tree-sitter-toml"))
+                 ))
+        (add-to-list 'treesit-language-source-alist grammar)
+        (unless (treesit-language-available-p (car grammar))
+          (treesit-install-language-grammar (car grammar)))))
+    :config
+    (mp-setup-install-grammars)
+    (setq auto-mode-alist
+          (append '(
+                    ("\\.js\\'"  . js-ts-mode)
+                    ("\\.html\\'"  . html-ts-mode)
+                    ("\\.jsonc\\'" . json-ts-mode)
+                    ("\\.toml\\'" . toml-ts-mode)
+                    ("\\.rs\\'" . rust-ts-mode)
+                    )
+                  auto-mode-alist))
+    (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
+    ;; (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
+    ;; (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
+    ;; (add-to-list 'major-mode-remap-alist
+    ;;              '(c-or-c++-mode . c-or-c++-ts-mode))
+    ;; (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(css-mode . css-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
+    )
+#+end_src
 ** init.el 文件尾
 #+BEGIN_SRC emacs-lisp
 
 (provide 'init)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
+#+END_SRC
+
+* COMMENT code.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle code.el
+:END:
+
+#+begin_src elisp
+  ;;; code.el  -*- lexical-binding: t -*-
+  ;;; Commentary:
+
+  ;;; Code:
+
+  (use-package c-ts-mode
+    :ensure nil
+    :custom
+    (c-ts-mode-indent-offset 2))
+
+  (use-package go-ts-mode
+    :ensure nil
+    :custom
+    (go-ts-mode-indent-offset 4))
+
+  (provide 'code)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; code.el ends here
 #+END_SRC
