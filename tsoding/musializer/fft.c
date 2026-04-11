@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#define N 4096 * 2 * 2
+#define N 16
 
 float pi;
 
@@ -12,7 +12,7 @@ void dft(float in[], float complex out[], size_t n) {
     out[f] = 0;
     for (size_t i = 0; i < n; ++i) {
       float t = (float)i / n;
-      out[f] += in[i] * cexp(2 * I * pi * f * t);
+      out[f] += in[i] * cexp(-2 * I * pi * f * t);
     }
   }
 }
@@ -24,7 +24,7 @@ void fft(float in[], size_t stride, float complex out[], size_t n) {
     out[0] = in[0];
     return;
   }
-  
+
   fft(in, stride * 2, out, n / 2);
   fft(in + stride, stride * 2, out + n / 2, n / 2);
 
@@ -48,6 +48,10 @@ int main() {
     in[i] = cosf(2 * pi * t * 1) + sinf(2 * pi * t * 2);
   }
 
-  //dft(in, out, N);
+  // dft(in, out, N);
   fft(in, 1, out, N);
+
+  for (size_t i = 0; i < N; ++i) {
+    printf("%02zu %.2f %.2f\n", i, creal(out[i]), cimag(out[i]));
+  }
 }
