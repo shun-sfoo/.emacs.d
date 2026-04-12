@@ -190,8 +190,11 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package emacs
     :ensure nil
     :custom
+    (bidi-display-reordering 'left-to-right)
     (bidi-paragraph-direction 'left-to-right)
     (bidi-inhibit-bpa t)
+    (redisplay-skip-fontification-on-input t)
+    (cursor-in-non-selected-windows nil)
     (fast-but-imprecise-scrolling t)
     (scroll-conservatively 101)
     (scroll-margin 0)
@@ -204,6 +207,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     (load-prefer-newer t)
     :config
     (setq auto-window-vscroll nil)
+    (setq read-process-output-max (* 4 1024 1024))
     (when (eq system-type 'darwin)
       (setq mac-option-modifier 'meta)
       (mac-auto-operator-composition-mode t)
@@ -361,6 +365,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     (auto-save-interval 300)
     (auto-save-timeout 30)
     (indent-tabs-mode nil)
+    (save-interprogram-paste-before-kill t)
     (kill-do-not-save-duplicates t))
 
 
@@ -603,8 +608,7 @@ https://github.com/zhangjie2012/use-package-document-cn
       :custom
       (default-input-method "rime")))
 
-  ;; deps : cmake libtool libvterm
-  (use-package vterm
+  (use-package ghostel
     :ensure t)
 
   (use-package exec-path-from-shell
