@@ -21,6 +21,8 @@ char *shift_args(int *argc, char ***argv) {
 plug_hello_t plug_hello = NULL;
 plug_init_t plug_init = NULL;
 plug_update_t plug_update = NULL;
+plug_pre_reload_t plug_pre_reload = NULL;
+plug_post_reload_t plug_post_reload = NULL;
 Plug plug = {0};
 
 const char *libplug_file_name = "./libplug.so";
@@ -59,6 +61,20 @@ bool reload_libplug() {
     return false;
   }
 
+  plug_pre_reload = dlsym(libplug, "plug_pre_reload");
+  if (plug_pre_reload == NULL) {
+    fprintf(stderr, "Error: could not find plug_pre_reload symbol in %s: %s\n",
+            libplug_file_name, dlerror());
+    return false;
+  }
+
+  plug_post_reload = dlsym(libplug, "plug_post_reload");
+  if (plug_post_reload == NULL) {
+    fprintf(stderr, "Error: could not find plug_post_reload symbol in %s: %s\n",
+            libplug_file_name, dlerror());
+    return false;
+  }
+
   return true;
 }
 
@@ -86,9 +102,10 @@ int main(int argc, char **argv) {
 
   while (!WindowShouldClose()) {
     if (IsKeyPressed(KEY_R)) {
-      if (!reload_libplug()) {
+      plug_pre_reload(&plug);
+      if (!reload_libplug())
         return 1;
-      }
+      plug_post_reload(&plug);
     }
     plug_update(&plug);
   }
