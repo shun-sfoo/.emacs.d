@@ -88,10 +88,41 @@ patch:
 路径末尾的 /：
 重要：/源文件夹路径/ 后面的斜杠表示“复制该文件夹里面的内容”。如果不加斜杠，会把“源文件夹”本身也拷贝到目标位置，导致层级多了一层（例如：/dest/源文件夹/...）。
 
+* haskell 工具
+haskell 工具会用到两个 pandoc 和 shellcheck 如果直接用arch仓库的包，会带来海量的依赖，
+
+因此跟 uv 和 rustup 一样 安装 ghcup 使用 cabal 源码编译安装
+
+使用 https://mirrors.ustc.edu.cn/ghcup/ 的源，安装ghcup, 注意中间附加的组件都选否
+
+全部安装完之后再利用 ghcup tui 去下载
+
+#+begin_src bash
+  curl --proto '=https' --tlsv1.2 -sSf https://mirrors.ustc.edu.cn/ghcup/sh/bootstrap-haskell | BOOTSTRAP_HASKELL_YAML=https://mirrors.ustc.edu.cn/ghcup/ghcup-metadata/ghcup-latest.yaml sh
+#+end_src
+
+ 这一步会自动配置好cabal的源，因此只需要配置
+~/.ghcup/config.yaml
+#+begin_src config
+  url-source:
+  OwnSource:
+    - https://mirrors.ustc.edu.cn/ghcup/ghcup-metadata/ghcup-latest.yaml
+#+end_src
+
+最后通过 cabal install pandoc ShellCheck
+
+注意 ShellCheck的大小写 下载就可以使用了
+
 * use-package 使用
 
 https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
+
 https://github.com/zhangjie2012/use-package-document-cn
+
+更新 package list 通过 package-refresh-contents
+
+
+
 ** 代码展开
 
 #+begin_src elisp

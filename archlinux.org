@@ -1,0 +1,396 @@
+* archlinux 利用 org babel 生成配置文件
+
+完全需要配置的配置文件直接生成文件
+增量修改配置的配置文件，像hyprland.config 不生成，只记录配置项，然后复制修改
+字体等二进制文件，复制到对应目录
+
+** zshrc
+
+#+begin_src bash :tangle ~/.zshrc
+export HISTFILE=~/.zsh_history
+export HISTSIZE=1000000   # the number of items for the internal history list
+export SAVEHIST=1000000   # maximum number of items for the history file
+# The meaning of these options can be found in man page of `zshoptions`.
+setopt HIST_IGNORE_ALL_DUPS  # do not put duplicated command into history list
+setopt HIST_SAVE_NO_DUPS  # do not save duplicated command
+setopt HIST_REDUCE_BLANKS  # remove unnecessary blanks
+setopt INC_APPEND_HISTORY_TIME  # append command to history file immediately after execution
+setopt EXTENDED_HISTORY  # record command start time
+
+[ -d /usr/share/zsh/plugins ] \
+  && source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh \
+  && source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+## rust tools
+[ -e /usr/bin/starship ] && eval "$(starship init zsh)"
+[ -e /usr/bin/zoxide ] && eval "$(zoxide init zsh)"
+[ -e /usr/bin/mcfly ] && eval "$(mcfly init zsh)"
+
+alias ls="eza --icons=auto"
+
+check_network() {
+    if curl -s --connect-timeout 3 --max-time 5 https://www.baidu.com &>/dev/null; then
+        echo "网络正常"
+        return 0
+    else
+        echo "WiFi已连接但无网络"
+        return 1
+    fi
+}
+
+pacadd() {
+    check_network || { echo "网络不可用"; return 1; }
+    if [ $# -lt 1 ]; then
+        echo "need package name"
+        return 1
+    fi
+
+    sudo pacman -S --needed "$@"
+    pacman -Qqe >"$HOME/Transformer/packages.list"
+}
+
+pacrm() {
+    check_network || { echo "网络不可用"; return 1; }
+    if [ $# -lt 1 ]; then
+        echo "need package name"
+        return 1
+    fi
+
+    sudo pacman -Rns "$@"
+    pacman -Qqe >"$HOME/Transformer/packages.list"
+}
+
+pacup() {
+    check_network || { echo "网络不可用"; return 1; }
+    sudo pacman -Syyu
+}
+
+#+end_src
+
+** zprofile
+
+#+begin_src bash
+[ "$(tty)" = "/dev/tty1" ] && exec start-hyprland
+#+end_src
+
+** fontconfig
+
+#+begin_src xml :tangle ~/.config/fontconfig :mkdirp yes
+<?xml version="1.0"?>
+  <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+  <fontconfig>
+    <alias>
+      <family>sans-serif</family>
+      <prefer>
+        <family>Noto Sans CJK SC</family>
+        <family>Symbols Nerd Font</family>
+        <family>Noto Color Emoji</family>
+        <family>Noto Sans CJK TC</family>
+        <family>Noto Sans CJK JP</family>
+      </prefer>
+    </alias>
+    <alias>
+      <family>serif</family>
+      <prefer>
+        <family>Noto Sans CJK SC</family>
+        <family>Symbols Nerd Font</family>
+        <family>Noto Color Emoji</family>
+        <family>Noto Sans CJK TC</family>
+        <family>Noto Sans CJK JP</family>
+      </prefer>
+    </alias>
+    <alias>
+      <family>monospace</family>
+      <prefer>
+        <family>Noto Sans Mono CJK SC</family>
+        <family>Symbols Nerd Font</family>
+        <family>Noto Color Emoji</family>
+        <family>Noto Sans Mono CJK TC</family>
+        <family>Noto Sans Mono CJK JP</family>
+      </prefer>
+    </alias>
+  </fontconfig>
+#+end_src
+
+** ghostty
+
+#+begin_src config :tangle ~/.config/ghostty/config.ghostty :mkdirp yes
+theme = TokyoNight Storm
+font-family = "Operator Mono Lig Book"
+font-size = 13
+alpha-blending = "native"
+background-opacity = 0.8
+background-blur = true
+copy-on-select = clipboard
+#+end_src
+
+** hyprland
+
+#+begin_src config
+monitor=,2520x1680@120.00Hz,auto,1.75,bitdepth, 10
+monitor = desc:AOC U2790B 0x00006734, preferred, 0x0, auto, bitdepth, 10
+#monitor = desc:Shenzhen Soogeen Electronics Co. LTD. L01N8A 0x01348C5C, preferred, 2560x0, 1, transform, 1
+monitor = desc:Shenzhen Soogeen Electronics Co. LTD. L01N8A 0x01348C5C, disable
+  
+# unscale XWayland
+xwayland {
+  force_zero_scaling = true
+}
+
+# toolkit-specific scale
+env = GDK_SCALE,2
+env = XCURSOR_SIZE,32
+
+$terminal = ghostty
+$menu = tofi-drun --drun-launch=true --font $HOME/.local/share/fonts/Operator_Mono_with_Lig/OperatorMonoSSmLig-Book.otf
+
+exec-once = waybar
+  
+# "Smart gaps" / "No gaps when only"
+  
+input {
+    kb_options = ctrl:nocaps
+    touchpad {
+        natural_scroll = true
+        disable_while_typing = true
+    }
+}
+
+bind = $mainMod, return, exec, $terminal
+
+windowrule {
+    name = rustdesk-remote
+    match:title = .*Remote.*
+
+    workspace = 4
+}
+
+windowrule {
+    name = rustdesk-transfer
+    match:title = .*Transfer.*
+
+    workspace = 8
+}  
+#+end_src
+
+** tofi
+
+#+begin_src config  :tangle ~/.config/tofi/config :mkdirp yes
+width = 100%
+height = 100%
+border-width = 0
+outline-width = 0
+padding-left = 35%
+padding-top = 35%
+result-spacing = 25
+num-results = 5
+font = monospace
+background-color = #000A
+#+end_src
+
+** waybar
+
+*** config.jsonc
+
+#+begin_src json :tangle ~/.config/waybar/config.jsonc :mkdirp yes
+// -*- mode: jsonc -*-
+{
+  "height": 30,
+  "spacing": 4,
+  "modules-left": [
+    "hyprland/workspaces"
+  ],
+  "modules-center": [
+    "hyprland/window"
+  ],
+  "modules-right": [
+    "cpu",
+    "battery",
+    "backlight",
+    "memory",
+    "wireplumber",
+    "temperature",
+    "network",
+    "clock",
+    "tray",
+    "custom/updates"
+  ],
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "on-scroll-up": "hyprctl dispatch workspace e+1",
+    "on-scroll-down": "hyprctl dispatch workspace e-1"
+  },
+  "hyprland/window": {
+    "format": "{}",
+    "rewrite": {
+      "(.*) — Firefox Developer Edition": "  $1",
+      "vim": " ",
+      "make": " "
+    },
+    "separate-outputs": true
+  },
+  "network": {
+    "format-icons": [
+      "󰤯",
+      "󰤟",
+      "󰤢",
+      "󰤥",
+      "󰤨"
+    ],
+    "format": "{icon}",
+    "format-wifi": " ⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes} {icon} ",
+    "format-ethernet": "⇣ {bandwidthDownBytes:7}  ⇡ {bandwidthUpBytes:7}  󰈀 ",
+    "format-disconnected": "󰤮",
+    "tooltip-format-wifi": "{essid} ({frequency} GHz)",
+    "tooltip-format-disconnected": "Disconnected",
+    "interval": 2
+  },
+  "wireplumber": {
+    "format": "{volume}% {icon}",
+    "format-icons": [
+      " ",
+      " ",
+      "  "
+    ]
+  },
+  "temperature": {
+    "hwmon-path": "/sys/class/hwmon/hwmon6/temp1_input",
+    "format": "{temperatureC}°C "
+  },
+  "clock": {
+    "format": "{:%H:%M}   ",
+    "tooltip-format": "<big>{:%Y %B} </big>\n<tt><small>{calendar}</small></tt> ",
+    "format-alt": "{:%Y-%m-%d}  "
+  },
+  "cpu": {
+    "format": "{usage}% 󰻠 "
+  },
+  "memory": {
+    "format": "{percentage}%  "
+  },
+  "custom/weather": {
+    "format": "{}",
+    "exec": "~/.config/waybar/scripts/weather.sh",
+    "interval": 3600,
+    "signal": 8, // 定义信号编号，用于手动触发更新
+    "return-type": "json",
+    "on-click": "xdg-open 'https://v2.wttr.in/Wuhan'"
+  },
+  "custom/updates": {
+    "format": "{}  ",
+    "exec": "~/.config/waybar/scripts/check-updates.sh",
+    "return-type": "json",
+    "signal": 7, // 定义信号编号，用于手动触发更新
+    "interval": 900,
+    "on-click": "pkill -RTMIN+7 waybar" // 点击时向waybar发送8号信号
+  }
+}
+#+end_src
+
+
+*** style.css
+
+#+begin_src css :tangle ~/.config/waybar/style.css :mkdirp yes
+  @import "/etc/xdg/waybar/style.css";
+
+  window#waybar {
+      background-color: rgba(36, 40, 59, 0.5);
+      border-bottom: 3px solid rgba(100, 114, 125, 0.5);
+      color: #c0caf5;
+      transition-property: background-color;
+      transition-duration: .5s;
+  }
+
+  #workspaces button.active {
+      background-color: #545c7e;
+      box-shadow: inset 0 -3px #c0caf5;
+  }
+
+  #custom-weather {
+      background-color: #73daca;
+      color: #000000;
+      padding-left: 10px;  /* 左侧间隙 */
+      padding-right: 10px; /* 右侧间隙 */
+  }
+
+  #network {
+      background-color: #7aa2f7;
+      min-width: 160px; 
+  }
+
+  #cpu {
+      background-color: #9fe044;
+  }
+
+  #memory {
+      background-color: #bb9af7
+  }
+
+
+  #wireplumber {
+      background-color: #c0caf5
+  }
+
+  #clock {
+      background-color: #414868
+  }
+
+  #tray {
+      background-color: #f7768e
+  }
+
+  #temperature {
+      background-color: #e0af68
+  }
+
+  #custom-updates {
+      background-color: #73daca;
+      color: #000000;
+      padding-left: 10px;  /* 左侧间隙 */
+      padding-right: 10px; /* 右侧间隙 */
+  }
+
+  #custom-updates.update-available {
+      background-color: #f7768e;
+  }
+#+end_src
+
+
+*** srcipts
+
+**** checkupdate
+
+#+begin_src bash :tangle ~/.config/waybar/scripts/check-updates.sh :mkdirp yes
+#!/usr/bin/env sh
+
+updates=$(checkupdates 2>/dev/null)
+
+if [ -z "$updates" ]; then
+  num=0
+else
+  num=$(echo "$updates" | wc -l)
+fi
+
+# Bash的参数扩展（如${parameter:-word}）主要进行的是文本替换。
+# 当parameter未设置或为空时，它直接将word部分作为字符串整体替换上去，不会主动解析word中的转义序列（如\n、\t等）
+# 这些转义序列会保持其字面形式。
+jq -c -n \
+  --arg text "$num" \
+  --arg tooltip "${updates:-系统已是最新状态}" \
+  '{
+    text: $text,
+    tooltip: $tooltip,
+    class: (if $text != "0" then "update-available" else "" end)
+  }'
+
+#+end_src
+
+**** weather 
+
+#+begin_src bash :tangle ~/.config/waybar/scripts/weather.sh :mkdirp yes
+#!/usr/bin/env sh
+weather=$(curl -s "https://wttr.in/武汉?format=3")
+cat <<EOF
+{"text": "${weather}", "tooltip": "点击显示完整预报"}
+EOF
+#+end_src
