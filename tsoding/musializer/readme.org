@@ -8,3 +8,30 @@ ffmpeg -f lavfi -i "anoisesrc=d=10:c=pink:r=44100" \
 ** check
 
 ffplay -i visualization_test.ogg -vf "showspectrum=s=1280x720:mode=combined:color=magma"
+
+
+** 说明
+typedef void (plug_hello_t)(void); 和 typedef void (*plug_hello_t)(void); 的本质区别在于：
+1. 第一种（函数类型）：  
+   定义 plug_hello_t 为 函数类型 本身（即：无参数、返回 void 的函数）。  
+   - ❌ 不能直接声明变量（C 中不允许函数类型变量）：  
+     plug_hello_t f; // 错误：不能定义函数类型变量  
+   - ✅ 可用于函数参数/返回类型（会自动调整为指针）：  
+          void register_handler(plug_hello_t handler); // 等价于 void register_handler(void (*handler)(void));
+     
+2. 第二种（函数指针类型）：  
+   定义 plug_hello_t 为 指向该函数类型的指针。  
+   - ✅ 可直接声明函数指针变量：  
+          plug_hello_t fp = my_hello; // 正确：fp 是函数指针
+        - ✅ 常用于需要存储/传递函数指针的场景（如回调、事件系统）。
+简单说：  
+- 第一种定义“函数是什么”，需加 * 得到指针（较少直接用）。  
+- 第二种直接定义“函数指针是什么”，可直接用（更常见）。  
+在实际代码中，你几乎总是需要第二种形式来声明函数指针变量。  
+例如：  
+// 常见写法（第二种）：
+typedef void (*callback_t)(void);
+callback_t cb = some_function;
+// 极少见的写法（第一种）：
+typedef void callback_t(void); // 定义函数类型
+void register_cb(callback_t *cb); // 参数需加 * 得到指针
