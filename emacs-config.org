@@ -595,28 +595,20 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure t
     :mode ("\\.pdf\\'" . pdf-view-mode)
     :hook
-    (pdf-view-mode . (lambda () (display-line-numbers-mode -1)))
+    (pdf-view-mode . (lambda ()
+                       (disable-mouse-mode -1)
+                       (display-line-numbers-mode -1)
+                       (auto-revert-mode t)
+                       ))
+    :config
+    (setq-default pdf-view-display-size 'fit-width)
     )
 
   (use-package org
     :ensure nil
-    :custom
-    (org-preview-latex-default-process 'dvisvgm)
-    )
-
-  (use-package auctex
-    :ensure t
-    :custom
-    (TeX-view-program-selection '((output-pdf "PDF Tools")))
-    (TeX-engine 'xetex)
-    )
-
-  (use-package cdlatex
-    :ensure t
-    :hook
-    (org-mode . org-cdlatex-mode)
-    (LaTeX-mode . cdlatex-mode)
-    )
+    :config
+    (setq org-latex-pdf-process
+          '("tectonic -X compile --outdir=%o -Z shell-escape %f")))
 #+end_src
 
 ** editor
@@ -697,7 +689,8 @@ https://github.com/zhangjie2012/use-package-document-cn
   (use-package eglot
     :ensure nil
     :hook
-    (prog-mode . eglot-ensure)
+    ((prog-mode . eglot-ensure)
+     (latex-mode . eglot-ensure))
     :bind
     (:map eglot-mode-map
           ("C-c l l" . eglot-code-action-organize-imports)
@@ -729,6 +722,13 @@ https://github.com/zhangjie2012/use-package-document-cn
                  '(js-base-mode . ("rass" "--" "typescript-language-server" "--stdio" "--" "biome" "lsp-proxy")))
     (add-to-list 'eglot-server-programs
                  '(html-ts-mode . ("biome" "lsp-proxy")))
+    (setq-default eglot-workspace-configuration
+                  '(:texlab (:build (:executable "tectonic"
+                                                 :args ["-X" "compile" "-Z" "shell-escape" "%f"]
+                                                 :onSave t) ;; 保存即触发 Tectonic 编译
+                                    :forwardSearch (:executable "emacsclient"
+                                                                :args ["--eval" "(pdf-sync-forward-search \"%f\" %l)"])
+                                    :chktex (:onOpen t :onEdit t))))
     )
 
   (use-package combobulate
