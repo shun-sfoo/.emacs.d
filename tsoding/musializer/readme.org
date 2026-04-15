@@ -35,3 +35,21 @@ callback_t cb = some_function;
 // 极少见的写法（第一种）：
 typedef void callback_t(void); // 定义函数类型
 void register_cb(callback_t *cb); // 参数需加 * 得到指针
+
+
+** hyprland 下拖动应用的方式
+由于raylib没有完全适配wayland
+
+在原生 Wayland 中，文件拖放涉及 wl_data_device 协议。raylib 的 LoadDroppedFiles() 依赖于底层窗口库对该协议的封装。
+
+    MIME 类型问题：Wayland 传递的是 URI 列表（通常以 text/uri-list 格式）。
+
+    URL 编码：Wayland 传回的路径通常带有 file:// 前缀，并且会对中文或特殊字符进行百分号编码（如 %20 代表空格）。
+
+如果打印结果是空白、乱码或没有任何输出，通常是因为数据在从合成器（Hyprland）传递到应用的过程中丢失了。
+
+所有要把  musializer 和 文件管理器都使用在终端通过 xwayland运行
+具体方式是禁用 Wayland 库加载
+在终端运行
+env -u WAYLAND_DISPLAY ./musializer
+env -u WAYLAND_DISPLAY pacmanfm

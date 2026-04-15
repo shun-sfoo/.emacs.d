@@ -19,14 +19,12 @@ char *shift_args(int *argc, char ***argv) {
 }
 
 #ifdef HOTRELOAD
-#define PLUG(name) name##_t *name = NULL;
+#define PLUG(name, ...) name##_t *name = NULL;
 #else
-#define PLUG(name) name##_t name;
+#define PLUG(name, ...) name##_t name;
 #endif
 LIST_OF_PLUGS
 #undef PLUG
-
-Plug plug = {0};
 
 const char *libplug_file_name = "./libplug.so";
 void *libplug = NULL;
@@ -44,7 +42,7 @@ bool reload_libplug() {
     return false;
   }
 
-#define PLUG(name)                                                             \
+#define PLUG(name, ...)                                                        \
   name = dlsym(libplug, #name);                                                \
   if (name == NULL) {                                                          \
     fprintf(stderr, "Error: could not %s symbol in %s: %s\n", #name,           \
@@ -80,15 +78,15 @@ int main(int argc, char **argv) {
   SetTargetFPS(60);
 
   InitAudioDevice();
-  plug_init(&plug, file_path);
+  plug_init(file_path);
 
   while (!WindowShouldClose()) {
     if (IsKeyPressed(KEY_R)) {
-      plug_pre_reload(&plug);
+      Plug *plug = (Plug *)plug_pre_reload();
       if (!reload_libplug())
         return 1;
-      plug_post_reload(&plug);
+      plug_post_reload(plug);
     }
-    plug_update(&plug);
+    plug_update();
   }
 }

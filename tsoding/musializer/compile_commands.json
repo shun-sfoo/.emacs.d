@@ -1,0 +1,43 @@
+[
+  {
+    "file": "plug.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "plug.c",
+      "-o",
+      "libplug.so"
+    ],
+    "directory": "/home/neo/.emacs.d/tsoding/musializer",
+    "output": "libplug.so"
+  },
+  {
+    "file": "fft.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "fft",
+      "fft.c"
+    ],
+    "directory": "/home/neo/.emacs.d/tsoding/musializer",
+    "output": "fft"
+  },
+  {
+    "file": "main.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-DHOTRELOAD",
+      "-o",
+      "musializer",
+      "main.c"
+    ],
+    "directory": "/home/neo/.emacs.d/tsoding/musializer",
+    "output": "musializer"
+  }
+]
