@@ -1,0 +1,16 @@
+[
+  {
+    "file": "main.cc",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-o",
+      "main",
+      "main.cc",
+      "-Wall",
+      "-Wextra"
+    ],
+    "directory": "/home/neo/.emacs.d/mastering/RayTracingInOneWeekend",
+    "output": "main"
+  }
+]
