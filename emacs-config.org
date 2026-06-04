@@ -38,81 +38,6 @@ patch:
 patch:
   "switches/@2/reset": 1  #表示將 switcher 列表中的第3個元素的初始值重設爲狀態1
 #+end_src
-* npm 全局安装应用配置
-
-使用用户级 npm 全局目录
-#+begin_src bash
-  mkdir -p ~/.local/npm
-  npm config set prefix ~/.local/npm
-  # add to .bashrc
-  export PATH="$HOME/.local/npm/bin:$PATH"
-  npm install -g typescript-language-server typescript @biomejs/biome
-#+end_src
-* 使用uv作为python工具流
-1. emacs的basedpyright会识别.venv中的包，所以无需在配置emacs
-2. compile 命令中通过 uv run 执行python， 也无需管理emacs配置
-3. uv下载包的命令， uv add 会自动创建.venv 下载也会下载到虚拟环境中
-4. uv 运行代码时也会先激活虚拟环境，所以在emacs中使用不需要做任何适配，除了 run-python这种情况。
-
-   使用 rassumfrassum 配置多lsp服务器
-  uv tool install rassumfrassum
-  uv tool install basedpyright
-  uv tool install ruff
-
-  新建一个项目
-  uv init new_project
-  uv python install 3.12
-  cd new_project
-  uv python pin 3.12
-  uv add package
-  uv run main.py
-* 备份到移动硬盘的命令
-
-#+begin_src bash
-  sudo rsync -ah --no-o --no-g --info=progress2 source_dir/ target_dir/
-#+end_src
-
-1. -a (归档模式)：
-核心功能：递归复制目录，并保留所有属性（权限、时间戳、软链接、属主等）。
-对硬盘友好：因为它保留了时间戳，下次运行时，rsync 能准确判断哪些文件没变过，从而跳过它们，避免对硬盘进行无谓的重复写入。
-
---no-o：明确告诉 rsync 不要尝试更改文件所有者。
---no-g：明确告诉 rsync 不要尝试更改文件所属组。
-
-2. -h (人类可读)：
-将文件大小显示为 K/M/G 单位，方便阅读进度。
-
-3. --info=progress2 (关键参数)：
-展示进度：这是比旧版 -P 或 --progress 更先进的参数。它会在同一行动态更新当前正在传输的文件进度（例如：file.mp4  50.00%  10MB/s），而不是为每个文件打印一堆新行刷屏。这让界面非常清爽，你能清楚看到整体速度和当前文件状态。
-
-路径末尾的 /：
-重要：/源文件夹路径/ 后面的斜杠表示“复制该文件夹里面的内容”。如果不加斜杠，会把“源文件夹”本身也拷贝到目标位置，导致层级多了一层（例如：/dest/源文件夹/...）。
-
-* haskell 工具
-haskell 工具会用到两个 pandoc 和 shellcheck 如果直接用arch仓库的包，会带来海量的依赖，
-
-因此跟 uv 和 rustup 一样 安装 ghcup 使用 cabal 源码编译安装
-
-使用 https://mirrors.ustc.edu.cn/ghcup/ 的源，安装ghcup, 注意中间附加的组件都选否
-
-全部安装完之后再利用 ghcup tui 去下载
-
-#+begin_src bash
-  curl --proto '=https' --tlsv1.2 -sSf https://mirrors.ustc.edu.cn/ghcup/sh/bootstrap-haskell | BOOTSTRAP_HASKELL_YAML=https://mirrors.ustc.edu.cn/ghcup/ghcup-metadata/ghcup-latest.yaml sh
-#+end_src
-
- 这一步会自动配置好cabal的源，因此只需要配置
-~/.ghcup/config.yaml
-#+begin_src config
-  url-source:
-  OwnSource:
-    - https://mirrors.ustc.edu.cn/ghcup/ghcup-metadata/ghcup-latest.yaml
-#+end_src
-
-最后通过 cabal install pandoc ShellCheck
-
-注意 ShellCheck的大小写 下载就可以使用了
-
 * use-package 使用
 
 https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
@@ -120,7 +45,6 @@ https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
 https://github.com/zhangjie2012/use-package-document-cn
 
 更新 package list 通过 package-refresh-contents
-
 
 
 ** 代码展开
@@ -207,17 +131,37 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+END_SRC
 
 ** package.el setting
+包管理器
+用 MELPA 获取社区扩展包。package.el 是内置的，这里显式 :ensure nil 避免use-package 重复 require。
+MELPA 比 ELPA 包更新更及时，对大多数第三方包更友好。
 #+begin_src emacs-lisp
+  (defconst my/is-a-mac (eq system-type 'darwin))
+
   (use-package package
+    :ensure nil
     :config
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     (unless (bound-and-true-p package--initialized)
       (package-initialize)))
+
+
 #+end_src
 ** default config
-#+begin_src emacs-lisp
-  (defconst *is-a-mac* (eq system-type 'darwin))
+*** 核心编辑器行为
+这些是 Emacs C 层的全局设置，不属于任何具体 .el 库，所以放进 use-package emacs 这个虚拟包中。
 
+~bidi-display-reordering / bidi-paragraph-direction / bidi-inhibit-bpa~:
+纯英文/代码工作流不需要双向文本渲染，关掉可以显著提高渲染性能，特别是在大文件滚动时减少 reorder 开销。
+redisplay-skip-fontification-on-input: 输入时不阻塞 redisplay， 避免打字卡顿。
+cursor-in-non-selected-windows nil: 非选中窗口不画光标，减少重绘。
+fast-but-imprecise-scrolling: 滚动优先速度，牺牲精确 fontify，对日常浏览体验提升明显，需要精确 fontify 时可手动触发。
+tab-width 4: 个人缩进习惯，兼顾多数语言的社区规范。
+use-short-answers t: y/n 代替 yes/no，提高交互效率。
+indent-tabs-mode nil: 强制用空格缩进，避免混用 tab/space 导致的对齐问题。
+load-prefer-newer t: 当存在 .el 和 .elc 时优先加载较新者， 开发 Elisp 时不会因为残留的 .elc 而用旧代码。
+read-process-output-max: 增大进程输出缓冲区到 4MB，LSP 等子进程通信量大时减少 read 系统调用次数。
+
+#+begin_src elisp
   (use-package emacs
     :ensure nil
     :custom
@@ -227,58 +171,99 @@ https://github.com/zhangjie2012/use-package-document-cn
     (redisplay-skip-fontification-on-input t)
     (cursor-in-non-selected-windows nil)
     (fast-but-imprecise-scrolling t)
-    (scroll-conservatively 101)
-    (scroll-margin 0)
-    (scroll-preserve-screen-position t)
     (tab-width 4)
-    ;; use y-or-n-p instead of yes-or-no-p
     (use-short-answers t)
-    (Man-notify-method 'aggressive)
-    (ediff-window-setup-function 'ediff-setup-windows-plain)
+    (indent-tabs-mode nil)
     (load-prefer-newer t)
     :config
-    (setq auto-window-vscroll nil)
     (setq read-process-output-max (* 4 1024 1024))
     (when (eq system-type 'darwin)
       (setq mac-option-modifier 'meta)
-      (mac-auto-operator-composition-mode t)
-      )
-    )
+      (mac-auto-operator-composition-mode t)))
 
-  (use-package project
+#+end_src
+
+***  手册页
+~Man-notify-method 'aggressive~: 打开 man page 时立即显示，不需要手动切换窗口。 查 man 时通常想立刻看内容。
+ #+begin_src elisp
+   (use-package man
+     :ensure nil
+     :custom
+     (Man-notify-method 'aggressive))
+ #+end_src
+
+*** 差异比较
+ediff-setup-windows-plain: 在单独 frame 中打开 Ediff， 而不是在当前 frame 切分窗口。避免污染当前工作的窗口布局，适合经常需要边看 diff 边编辑的场景。
+#+begin_src elisp
+  (use-package ediff
     :ensure nil
     :custom
-    (project-vc-extra-root-markers '("Cargo.toml")))
+    (ediff-window-setup-function 'ediff-setup-windows-plain))
+#+end_src
 
+*** 项目管理
+ project-vc-extra-root-markers: 让 Emacs 的 project.el 把包含 Cargo.toml 的目录识别为项目根目录。Rust 项目通常没有 .git 子模块，但 Cargo.toml 是可靠的根目录标志。
+
+ #+begin_src elisp
+   (use-package project
+     :ensure nil
+     :custom
+     (project-vc-extra-root-markers '("Cargo.toml")))
+ #+end_src
+
+*** 代码可视化
+ 用 face 高亮缩进空格和多出的 tab 字符，再给 tab 加一个 » 标记。 混合 tab/space 缩进是代码风格问题的常见来源，可视化后一目了然， 在 code review 前就能自我纠正。
+#+begin_src elisp
   (use-package whitespace
     :hook (prog-mode . whitespace-mode)
     :custom
     (whitespace-style '(face indentation tabs tab-mark))
     (whitespace-display-mappings
      '((tab-mark 9 [187 9] [92 9]))))
+#+end_src
 
-  (use-package bookmark
-    :ensure nil
-    :custom
-    (bookmark-save-flag 1))
+*** 书签
+ bookmark-save-flag 1: 每次 bookmarked 操作后自动保存到文件。 防止意外退出导致书签丢失，比默认的退出时保存更安全。
 
+ #+begin_src elisp
+   (use-package bookmark
+     :ensure nil
+     :custom
+     (bookmark-save-flag 1))
+ #+end_src
+
+*** 词典
+ M-# 不与其他常用 keymap 冲突，且 # 看起来像字典的符号。
+#+begin_src elisp
   (use-package dictionary
     :ensure nil
     :bind ("M-#" . dictionary-lookup-definition))
+#+end_src
 
-  ;; (use-package ispell
-  ;;   :when (executable-find "aspell")
-  ;;   :hook
-  ;;   (text-mode . flyspell-mode)
-  ;;   (prog-mode . flyspell-prog-mode))
+*** 编辑体验
+ hl-line: 不启用全局模式（global-hl-line-mode -1），因为有些 major-mode 自己的高亮会与之冲突。只在进入 major-mode 后按需启用，
+ 且排除 vterm（终端模拟不需要行高亮，且会干扰终端输出渲染）。
+ 
+ so-long: 打开超长行文件（如压缩后的 JS）时自动关闭耗时的 minor mode，避免 Emacs 卡死。对查看大日志文件也很关键。
+ 
+ delsel: 选中文本后直接键入会替换选中内容，符合大多数编辑器的直觉。
+ 
+ icomplete (fido-vertical-mode): 用垂直列表展示补全候选，取代默认的水平
+ 
+ minibuffer 补全。Icomplete 比 Vertico/Consult 轻量，且 Emacs 30 内置，零额外依赖。
+ 
+ display-line-numbers: 启用行号并用 relative 模式。relative 可以让组合命令（如 d5j）不需要心算行号差值，光标所在行仍显示绝对行号。
 
+#+begin_src elisp
   (use-package hl-line
     :ensure nil
     :init
     (global-hl-line-mode -1)
-    :hook (after-change-major-mode . (lambda ()
-                                       (unless (derived-mode-p 'vterm-mode)
-                                         (hl-line-mode 1)))))
+    :preface
+    (defun my/hl-line-activate ()
+      (unless (derived-mode-p 'vterm-mode)
+        (hl-line-mode 1)))
+    :hook (after-change-major-mode . my/hl-line-activate))
 
   (use-package so-long
     :ensure nil
@@ -289,40 +274,59 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure nil
     :hook (after-init . delete-selection-mode))
 
-  (use-package global-line-numbers
-    :ensure nil
-    :hook (after-init . global-display-line-numbers-mode))
-
   (use-package icomplete
     :ensure nil
     :hook (after-init . fido-vertical-mode))
 
   (use-package display-line-numbers
     :ensure nil
+    :hook (after-init . global-display-line-numbers-mode)
     :custom
     (display-line-numbers-type 'relative))
+#+end_src
 
-  (use-package completion-preview
-    :ensure nil
-    :if (version< "30" emacs-version)
-    :bind (:map completion-preview-active-mode-map
-                ("M-n" . completion-preview-next-candidate)
-                ("M-p" . completion-preview-prev-candidate))
-    :hook
-    (after-init . global-completion-preview-mode))
+*** 补全与按键提示
+completion-preview: Emacs 30 新内置的 popup 补全，类似 VSCode 的行内补全预览。用 version< 30 保护，避免低版本报错。
+ 
+which-key: 输入前缀键后弹窗显示可用快捷键。Emacs 30 已内置，之前需要从 ELPA 安装。同样用 version< 30 保护。
 
-  (use-package which-key
-    :ensure nil
-    :if (version< "30" emacs-version)
-    :hook
-    (after-init . which-key-mode))
+   #+begin_src elisp
+     (use-package completion-preview
+       :ensure nil
+       :if (version< "30" emacs-version)
+       :bind (:map completion-preview-active-mode-map
+                   ("M-n" . completion-preview-next-candidate)
+                   ("M-p" . completion-preview-prev-candidate))
+       :hook
+       (after-init . global-completion-preview-mode))
 
+     (use-package which-key
+       :ensure nil
+       :if (version< "30" emacs-version)
+       :hook
+       (after-init . which-key-mode))
+   #+end_src
+
+*** 滚动
+ 图形界面下启用像素级平滑滚动，逐行滚动比默认的行跳跃更流畅。
+#+begin_src elisp
   (use-package pixel-scroll
     :ensure nil
     :if (display-graphic-p)
     :hook
     (after-init . pixel-scroll-precision-mode))
+#+end_src
 
+*** 文件操作
+auto-save-visited-mode: 在 focus-out 或 idle 时自动保存文件内容到磁盘，不是存到 #autosave# 临时文件。比传统 auto-save 更安全。
+ 
+make-backup-files nil: 不生成 file~ 备份文件。个人不需要备份机制，版本控制已经承担了历史记录职责。
+ 
+~auto-save-interval / auto-save-timeout~: 每 300 次按键或 30 秒空闲触发一次自动保存，平衡性能与数据安全。
+ 
+executable-make-buffer-file-executable-if-script-p: 保存 .sh/.py 等脚本时自动加可执行权限，省去手动 chmod +x。
+
+#+begin_src elisp
   (use-package files
     :ensure nil
     :hook
@@ -331,30 +335,45 @@ https://github.com/zhangjie2012/use-package-document-cn
     :custom
     (make-backup-files nil)
     (auto-save-default t)
-    (auto-save-visited-interval 5))
+    (auto-save-visited-interval 5)
+    (auto-save-interval 300)
+    (auto-save-timeout 30))
+#+end_src
 
+*** 重复命令
+repeat-mode 让按完 C-c l n 后只需按 n/p 就能连续跳转 flymake 错误， 不需要每次都按 C-c l prefix。
+
+eglot-error-repeat-map: 定义 n/p 分别对应 next/prev error，并用 put 挂到 flymake-goto-next-error 等命令的 repeat-map 属性上 这是 repeat-mode 识别"可重复命令"的标准做法。
+
+#+begin_src elisp
   (use-package repeat
     :ensure nil
     :hook (after-init . repeat-mode)
     :config
-    ;; 1. 定义专属的错误跳转 map
     (defvar eglot-error-repeat-map
       (let ((map (make-sparse-keymap)))
         (define-key map "n" #'flymake-goto-next-error)
         (define-key map "p" #'flymake-goto-prev-error)
         map)
       "Keymap to repeat flymake error navigation.")
-
-    ;; 2. 将命令关联到该 map
     (put #'flymake-goto-next-error 'repeat-map 'eglot-error-repeat-map)
     (put #'flymake-goto-prev-error 'repeat-map 'eglot-error-repeat-map))
+#+end_src
 
-  ;; (use-package  startup
-  ;;   :ensure nil
-  ;;   :custom
-  ;;   (inhibit-startup-screen t))
+*** 编程辅助
+which-func: 在 mode-line 显示当前函数/类名，方便定位代码上下文。
+ 
+elec-pair: 输入 ( { " 时自动补全另一半，减少击键次数。
 
+electric-indent: 输入回车后自动缩进到正确位置，不用手动按 TAB。
+
+flymake: Emacs 内置的即时语法检查后端，与 eglot 配合使用。
+
+flymake-show-diagnostics-at-end-of-line nil (>= Emacs 30)：不在行末追加诊断信息，避免长行被撑得更长，改用 mode-line 或 fringe 指示。
+
+#+begin_src elisp
   (use-package which-func
+    
     :ensure nil
     :hook
     (prog-mode . which-function-mode))
@@ -376,30 +395,60 @@ https://github.com/zhangjie2012/use-package-document-cn
     :config
     (when (version< "30" emacs-version)
       (setq flymake-show-diagnostics-at-end-of-line nil)))
+#+end_src
 
+*** 搜索
+isearch-lazy-count t: 在 isearch 时显示匹配总数和当前位置，方便评估搜索范围。
+
+#+begin_src elisp
   (use-package isearch
     :ensure nil
     :custom
     (isearch-lazy-count t))
+#+end_src
 
+*** 基础编辑
+mode-line-stats: 显示行号、列号、文件大小，都是在编辑中频繁需要的信息。
+
+prettify-symbols-mode: 在 Elisp 中将 lambda 显示为 λ，增加代码可读性。
+
+save-interprogram-paste-before-kill: 在 Emacs 内 kill 之前先把系统剪贴板的内容存入 kill-ring，避免 kill 覆盖了刚复制的内容。
+
+kill-do-not-save-duplicates: 连续复制相同内容不重复入 kill-ring，让 C-y M-y 循环更清爽。
+
+#+begin_src elisp
   (use-package simple
     :ensure nil
-    :hook (after-init . (lambda ()
-                          (line-number-mode)
-                          (column-number-mode)
-                          (size-indication-mode)
-                          ))
-    :hook (emacs-lisp-mode . (lambda ()
-                               (prettify-symbols-mode)
-                               ))
+    :preface
+    (defun my/mode-line-stats ()
+      (line-number-mode)
+      (column-number-mode)
+      (size-indication-mode))
+    (defun my/prettify-symbols ()
+      (prettify-symbols-mode))
+    :hook (after-init . my/mode-line-stats)
+    :hook (emacs-lisp-mode . my/prettify-symbols)
     :custom
-    (auto-save-interval 300)
-    (auto-save-timeout 30)
-    (indent-tabs-mode nil)
     (save-interprogram-paste-before-kill t)
     (kill-do-not-save-duplicates t))
+#+end_src
 
-
+*** 自动刷新
+ 文件在 Emacs 外被修改后自动重载缓冲区，配合 version control 非常有用（git checkout、git pull 后不用手动 revert-buffer）。
+ 
+ global-auto-revert-non-file-buffers t: 也刷新 Dired、Buffer Menu 等非文件缓冲区，保持文件管理视图同步。
+ 
+ auto-revert-interval 3: 每 3 秒检查一次，比默认值更及时。
+ 
+ auto-revert-remote-files nil: 远程文件（Tramp）不自动刷新，避免网络 IO。
+ 
+ auto-revert-use-notify t: 优先用 inotify/kqueue 监听，不用轮询。
+ 
+ auto-revert-avoid-polling nil: 当 notify 不可用时允许回退到轮询。
+ 
+ auto-revert-verbose t: 发生自动重载时显示消息，便于察觉文件变更。
+ 
+#+begin_src elisp
   (use-package autorevert
     :ensure nil
     :commands (auto-revert-mode global-auto-revert-mode)
@@ -412,7 +461,15 @@ https://github.com/zhangjie2012/use-package-document-cn
     (auto-revert-use-notify t)
     (auto-revert-avoid-polling nil)
     (auto-revert-verbose t))
+#+end_src
+*** 文件浏览
+dired-dwim-target t: 复制/移动文件时把对面窗口的目录作为默认目标路径，在双栏 Dired 或从 Dired 复制到另一个目录时减少路径输入。
 
+dired-auto-revert-buffer t: 外部变更后自动刷新 Dired 缓冲区。
+
+eshell-scroll-to-bottom-on-input: 输入命令时自动滚动到 buffer 末尾，避免光标跑出可视区域。
+
+#+begin_src elisp
   (use-package dired
     :ensure nil
     :custom
@@ -423,13 +480,32 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure nil
     :custom
     (eshell-scroll-to-bottom-on-input 'this))
+#+end_src
 
+*** 窗口管理
+switch-to-buffer-in-dedicated-window 'pop: 在专用窗口中不能用 switch-to-buffer 切换 buffer，避免意外覆盖专用窗口内容。
+ 
+switch-to-buffer-obey-display-actions t: 让 switch-to-buffer 也遵守display-buffer-alist 规则，统一窗口行为。
+
+scroll-conservatively 101 / scroll-margin 0 / scroll-preserve-screen-position t: 光标到达窗口边界时只滚动最少行数，不会"跳跃式"滚动，保持阅读连续性。
+
+auto-window-vscroll nil: 禁止垂直微滚动，避免行部分可见时的渲染问题。
+
+display-buffer-alist:
+   *Dictionary* 用侧边栏（宽度 70），不用弹窗，方便边看边输。
+   *Help* 优先重用已有窗口，没有才弹新窗口，减少窗口数量。
+   
+#+begin_src elisp
   (use-package window
     :ensure nil
     :custom
     (switch-to-buffer-in-dedicated-window 'pop)
     (switch-to-buffer-obey-display-actions t)
+    (scroll-conservatively 101)
+    (scroll-margin 0)
+    (scroll-preserve-screen-position t)
     :config
+    (setq auto-window-vscroll nil)
     (add-to-list 'display-buffer-alist
                  '("^\\*Dictionary\\*"
                    (display-buffer-in-side-window)
@@ -439,32 +515,61 @@ https://github.com/zhangjie2012/use-package-document-cn
                  '("\\*Help\\*"
                    (display-buffer-reuse-window display-buffer-pop-up-window)))
     )
+#+end_src
 
+*** 缓冲区管理
+ ibuffer 比默认的 list-buffers 更强大：支持分组、过滤、列排序。
+ 
+ ibuffer-movement-cycle nil: 不循环滚动，到底部 / 顶部就停住。
+ 
+ ibuffer-old-time 24: 超过 24 小时未访问的 buffer 标记为 old，方便清理。
+ 
+#+begin_src elisp
   (use-package ibuffer
     :ensure nil
     :bind ([remap list-buffers] . #'ibuffer-list-buffers)
     :custom
     (ibuffer-movement-cycle nil)
     (ibuffer-old-time 24))
+#+end_src
 
-  ;; (use-package indent
-  ;;   :ensure nil
-  ;;   :custom
-  ;;   (tab-always-indent 'complete)
-  ;;   )
+*** 迷你缓冲区
+completion-cycle-threshold 3: 候选数 <= 3 时循环选择代替上下箭头。
 
+completion-category-overrides: 文件路径补全用 partial-completion 风格，允许 f/o/b → foo/bar/baz 这种缩写，大幅减少路径输入量。
+
+completions-detailed t: 补全列表显示更多信息（如文档、类型）。
+
+#+begin_src elisp
   (use-package minibuffer
     :ensure nil
     :custom
     (completion-cycle-threshold 3)
     (completion-category-overrides '((file (styles . (partial-completion)))))
     (completions-detailed t))
+#+end_src
 
+*** 代码导航
+用 completing-read 交互选择跳转目标，不是在 xref 弹窗中选 ——配合 fido-vertical-mode 可以获得更好的搜索体验。
+#+begin_src elisp
   (use-package xref
     :ensure nil
     :custom
-    (xref-show-definitions-function  #'xref-show-definitions-completing-read))
+    (xref-show-definitions-function #'xref-show-definitions-completing-read))
+#+end_src
 
+*** 会话持久化
+recentf: 记录最近打开的文件，C-x C-r 快速打开。排除压缩文件/图片/autoload 等无关文件，减少列表噪音。
+
+recentf-auto-cleanup: daemon 模式下每 300 秒自动清理不存在的文件，非 daemon 模式则在退出时清理。
+
+savehist: 保存 minibuffer 历史、kill-ring、mark-ring、搜索历史到文件，下次启动恢复，减少重复输入。
+
+saveplace: 记住每个文件上次光标位置，重启后回到离开时的位置。
+
+save-place-limit 400: 最多记住 400 个文件的位置。
+
+#+begin_src elisp
   (use-package recentf
     :ensure nil
     :commands (recentf-mode recentf-cleanup)
@@ -490,9 +595,9 @@ https://github.com/zhangjie2012/use-package-document-cn
     :custom
     (savehist-autosave-interval 600)
     (savehist-additional-variables
-     '(kill-ring                        ; clipboard
-       register-alist                   ; macros
-       mark-ring global-mark-ring       ; marks
+     '(kill-ring
+       register-alist
+       mark-ring global-mark-ring
        search-ring regexp-search-ring)
      )
     )
@@ -504,14 +609,20 @@ https://github.com/zhangjie2012/use-package-document-cn
     (after-init . save-place-mode)
     :custom
     (save-place-limit 400))
+#+end_src
 
+*** 字体
+macOS: Inconsolata 等宽字体 + PingFang SC 显示中文，保证英文和中文都有良好的渲染效果。Nerd Font 提供图标/符号（如 mode-line 的 git 图标）。
+
+Linux: Operator Mono Lig Book（带连字体）配合 LXGW WenKai Mono（霞鹜文楷）看中文。同样用 Nerd Font 兜底符号。
+#+begin_src elisp
   (use-package faces
     :if (display-graphic-p)
     :ensure nil
     :preface
     (defun my/apply-font (&optional frame)
       (with-selected-frame (or frame (selected-frame))
-        (if *is-a-mac*
+        (if my/is-a-mac
             (progn
               (set-face-attribute 'default nil :family "Inconsolata" :height 180 :weight 'regular)
               (set-fontset-font t 'han (font-spec :family "PingFang SC"))
@@ -533,18 +644,24 @@ https://github.com/zhangjie2012/use-package-document-cn
     :config
     (my/apply-font (selected-frame))
     )
-
 #+end_src
+
 ** enhancing elisp
-#+begin_src emacs-lisp
-  ;; Enables automatic indentation of code while typing
+
+*** Elisp 开发
+aggressive-indent: 自动缩进 Elisp 代码，不用每次手按 TAB。仅对 Emacs Lisp 启用，其他语言已有 electric-indent-mode。
+
+highlight-defined: 高亮 Elisp 中的函数和变量定义，区分调用与定义，方便阅读和理解代码结构。
+
+paredit: 结构化编辑括号，自动保持括号平衡。unbind RET 是因为paredit 的 RET 行为会插入换行后再缩进，与 electric-indent 冲突。
+
+#+begin_src elisp
   (use-package aggressive-indent
     :ensure t
     :commands aggressive-indent-mode
     :hook
     (emacs-lisp-mode . aggressive-indent-mode))
 
-  ;; Highlights function and variable definitions in Emacs Lisp mode
   (use-package highlight-defined
     :ensure t
     :commands highlight-defined-mode
@@ -559,10 +676,25 @@ https://github.com/zhangjie2012/use-package-document-cn
     :config
     (define-key paredit-mode-map (kbd "RET") nil))
 
+  (use-package ef-themes
+    :ensure t
+    :init
+    (ef-themes-take-over-modus-themes-mode 1)
+    (modus-themes-load-theme 'ef-bio))
 #+end_src
+
 ** org
 
-#+begin_src emacs-lisp
+*** Org Mode
+org-capture: C-c c 快速捕获想法。template 区分 TODO / READING / BLOG三个文件，分别管理任务、阅读、写作。clock-in/clock-resume 方便记录每项任务的时间花费。
+
+org-agenda: C-c a 打开周/日视图。agenda-files 与 capture 保持一致。
+ 
+org-modern: 用现代样式美化 Org 标题、列表、检查框等元素。纯 CSS 模拟，不改数据结构，关闭后恢复原样。
+
+org-latex-pdf-process: 用 tectonic 替代 pdflatex/xelatex。tectonic自动下载依赖包，不需要手动管理 texlive 宏包。
+
+#+begin_src elisp
   (use-package org-capture
     :ensure nil
     :bind  (("C-c c" . org-capture))
@@ -576,7 +708,6 @@ https://github.com/zhangjie2012/use-package-document-cn
                              ))
     )
 
-
   (use-package org-agenda
     :ensure nil
     :bind (("C-c a" . org-agenda))
@@ -588,20 +719,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure t
     :hook
     (org-mode . global-org-modern-mode)
-    (org-agenda-finalize. org-modern-agenda)
-    )
-
-  (use-package pdf-tools
-    :ensure t
-    :mode ("\\.pdf\\'" . pdf-view-mode)
-    :hook
-    (pdf-view-mode . (lambda ()
-                       (disable-mouse-mode -1)
-                       (display-line-numbers-mode -1)
-                       (auto-revert-mode t)
-                       ))
-    :config
-    (setq-default pdf-view-display-size 'fit-width)
+    (org-agenda-finalize . org-modern-agenda)
     )
 
   (use-package org
@@ -613,6 +731,31 @@ https://github.com/zhangjie2012/use-package-document-cn
 
 ** editor
 
+*** PDF 阅读
+pdf-tools 比 Emacs 内置的 DocView 渲染更清晰，支持文本选择/搜索/标注。disable-mouse-mode -1 避免鼠标干扰阅读模式。
+行号在 PDF 中无意义，关掉。auto-revert 在 PDF 文件被重新编译后自动刷新。
+fit-width 让页面自适应窗口宽度，适合屏幕阅读。
+
+#+begin_src elisp
+  (use-package pdf-tools
+    :ensure t
+    :mode ("\\.pdf\\'" . pdf-view-mode)
+    :preface
+    (defun my/pdf-view-setup ()
+      (disable-mouse-mode -1)
+      (display-line-numbers-mode -1)
+      (auto-revert-mode t))
+    :hook
+    (pdf-view-mode . my/pdf-view-setup)
+    :config
+    (setq-default pdf-view-display-size 'fit-width)
+    )
+#+end_src
+
+
+*** 多光标
+批量编辑工具：同时操作多个光标位置的文本。mc/list-file: 保存多光标 session 列表到用户目录，避免污染 git 仓库。
+
 #+begin_src elisp
   (use-package multiple-cursors
     :ensure t
@@ -623,14 +766,28 @@ https://github.com/zhangjie2012/use-package-document-cn
            ("C-c m c" . mc/edit-beginnings-of-lines)
            ("C-c m e" . mc/edit-ends-of-lines))
     :config
-    (setq mc/list-file "~/.emacs.d/.mc-lists.el")) ; 可选：保存宏
+    (setq mc/list-file (expand-file-name ".mc-lists.el" user-emacs-directory)))
+#+end_src
 
+
+*** 输入法
+ Linux 下使用中州韵（Rime）输入法。默认输入法设为 rime 即可， C-\ 切换，不需要额外配置。macOS 下用系统自带输入法。
+#+begin_src elisp
   (when (eq system-type 'gnu/linux)
     (use-package rime
       :ensure t
       :custom
       (default-input-method "rime")))
+#+end_src
 
+
+*** 终端与 Shell 集成
+ghostel: Ghostty 终端与 Emacs 之间通过 D-Bus 通信，提供编辑等集成功能。
+
+exec-path-from-shell: Emacs GUI 启动时不会加载 shell rc 文件，PATH 和 MANPATH 等环境变量不完整。该包从 shell 继承完整环境。
+
+disable-mouse: 全局禁用鼠标操作。纯键盘工作流不需要鼠标，且能避免偶尔误触导致焦点变化。
+#+begin_src elisp
   (use-package ghostel
     :ensure t)
 
@@ -643,10 +800,19 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure t
     :config
     (global-disable-mouse-mode))
+#+end_src
 
+
+*** Markdown 编辑
+为 .md 文件启用 markdown-mode，提供语法高亮、预览等基础编辑能力。
+#+begin_src elisp
   (use-package markdown-mode
     :ensure t)
+#+end_src
 
+*** RSS 阅读
+Elfeed 是 Emacs 内置的 RSS 客户端。这些 feed 包括技术博客、社区、资讯聚合，涵盖编程语言、Emacs、个人博客等领域。
+#+begin_src elisp
   (use-package elfeed
     :ensure t
     :config
@@ -665,8 +831,25 @@ https://github.com/zhangjie2012/use-package-document-cn
                          ("https://hnrss.org/frontpage" Hacker News: Front Page)
                          ))
     )
+#+end_src
 
 
+*** 实用命令
+crux 提供一系列比默认更智能的编辑命令，通过 remap 替换掉 Emacs 原生命令：
+
+crux-smart-kill-line: kill-line 但不会删除换行，且光标在行尾时倒转行为。
+
+crux-move-beginning-of-line: 在第一列和缩进起点间切换，比标准的move-beginning-of-line 更符合直觉。
+
+crux-keyboard-quit-dwim: C-g 的增强版，在 minibuffer 和普通 buffer中行为更智能。
+
+crux-open-with: 用外部程序打开当前文件。
+
+crux-smart-open-line / -above: 在当前行上方/下方插入空行并缩进，不用考虑光标在行中的位置。
+
+crux-kill-line-backwards: 从光标位置删除到行首。
+
+#+begin_src elisp
   (use-package crux
     :ensure t
     :bind
@@ -679,12 +862,34 @@ https://github.com/zhangjie2012/use-package-document-cn
      ("C-S-<return>" . crux-smart-open-line-above)
      ("C-<backspace>" . crux-kill-line-backwards))
     )
-
-  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-  (load-theme 'gruber-neo-darker t)
 #+end_src
 
 ** programming
+*** LSP 语言服务
+Eglot 是 Emacs 内置的 LSP 客户端，比 LSP-mode 更轻量、与 Emacs内置功能集成更好（flymake、xref、eldoc 等）。
+
+eglot-ensure: 进入 prog-mode / latex-mode 时自动启动 LSP。
+
+按键设计：
+   C-c l prefix 是所有 LSP 操作的入口，l 取 language 之意。
+   organize-imports / format / code-actions 是高频重构操作。
+   eldoc / find-implementation / find-declaration / rename 是日常
+   代码导航操作。
+   reconnect / shutdown / events-buffer / stderr-buffer 用于调试
+   和管理 LSP 服务器。
+   flymake-goto-prev/next-error 放在这里是因为 diagnostics 是
+   Eglot 的核心输出，放在相同 keymap 下更顺手。
+
+ 服务器配置：
+   Python: rass (Rust 写的 LSP 客户端) + basedruff (Ruff 的 LSP 包装)。
+   JavaScript: rass → typescript-language-server → biome lsp-proxy。
+   HTML: biome 直接做 LSP。
+   TeX: texlab 配合 tectonic 编译。
+
+ texlab workspace 配置：
+   build: 用 tectonic 编译，:onSave t 保存即编译，适合 LaTeX 即时预览。
+   forwardSearch: 用 emacsclient 打开 PDF 并定位到对应源行。
+   chktex: 保存和打开时自动检查 LaTeX 语法。
 #+begin_src elisp
   (use-package eglot
     :ensure nil
@@ -694,24 +899,21 @@ https://github.com/zhangjie2012/use-package-document-cn
     :bind
     (:map eglot-mode-map
           ("C-c l l" . eglot-code-action-organize-imports)
-          ("C-c l q" . eglot-code-action-quickfix)
+          ("C-c l f" . eglot-format)
+          ("C-c l o" . eglot-code-action-organize-imports)
+
+          ;; --- navigation & documentation ---
+          ("C-c l h" . eldoc)
           ("C-c l i" . eglot-find-implementation)
-          ;; --- [核心操作] ---
-          ("C-c l r" . eglot-rename)            ; Rename (重命名)
-          ("C-c l a" . eglot-code-actions)      ; Action (代码行为/修复)
-          ("C-c l f" . eglot-format)            ; Format (格式化)
-          ("C-c l o" . eglot-code-action-organize-imports) ; Optimize (整理导入)
+          ("C-c l t" . eglot-find-declaration)
+          ("C-c l r" . eglot-rename)
+          ("C-c l a" . eglot-code-actions)
 
-          ;; --- [查看与跳转] ---
-          ("C-c l h" . eldoc)                   ; Help (查看文档/签名)
-          ("C-c l i" . eglot-find-implementation) ; Implementation (跳转实现)
-          ("C-c l t" . eglot-find-declaration)    ; Type/Decl (跳转声明)
-
-          ;; --- [管理与调试] ---
-          ("C-c l s" . eglot-reconnect)         ; Start/Restart (重连)
-          ("C-c l q" . eglot-shutdown)          ; Quit (关闭服务器)
-          ("C-c l e" . eglot-events-buffer)     ; Events (查看通信日志)
-          ("C-c l w" . eglot-stderr-buffer)     ; Watch (查看错误日志)
+          ;; --- server management ---
+          ("C-c l s" . eglot-reconnect)
+          ("C-c l q" . eglot-shutdown)
+          ("C-c l e" . eglot-events-buffer)
+          ("C-c l w" . eglot-stderr-buffer)
           ("C-c l p" . flymake-goto-prev-error)
           ("C-c l n" . flymake-goto-next-error)
           )
@@ -725,23 +927,40 @@ https://github.com/zhangjie2012/use-package-document-cn
     (setq-default eglot-workspace-configuration
                   '(:texlab (:build (:executable "tectonic"
                                                  :args ["-X" "compile" "-Z" "shell-escape" "%f"]
-                                                 :onSave t) ;; 保存即触发 Tectonic 编译
+                                                 :onSave t)
                                     :forwardSearch (:executable "emacsclient"
                                                                 :args ["--eval" "(pdf-sync-forward-search \"%f\" %l)"])
                                     :chktex (:onOpen t :onEdit t))))
     )
+#+end_src
 
+*** 结构化编辑
+ Combobulate 基于 Tree-sitter 的语法树做代码结构化编辑（移动/变换/选择语法节点），比传统基于正则的编辑更准确。
+ 绑定到 C-c , prefix 避免与crux 的 C-c o 冲突。在 prog-mode 和 toml-ts-mode 下启用。
+ 
+#+begin_src elisp
   (use-package combobulate
     ;;:load-path "~/.emacs.d/lisp-site/combobulate"
     :vc (:url "https://github.com/mickeynp/combobulate" :branch "main")
     :custom
-    (combobulate-key-prefix "C-c o")
+    (combobulate-key-prefix "C-c ,")
     :hook (
            (prog-mode . combobulate-mode)
            (toml-ts-mode . combobulate-mode)
            )
     )
+#+end_src
 
+*** Tree-sitter 语法解析引擎
+ treesit-font-lock-level 4: 最高等级的语法高亮，使用完整的 Tree-sitter查询捕获信息，比传统 regex font-lock 更准确。
+
+mp-setup-install-grammars: 自动安装缺失的 Tree-sitter grammar。Emacs 30+ 内置的 grammar 列表不完整，手动定义常用语言。
+
+auto-mode-alist 覆盖: 将 .js / .html / .jsonc / .toml / .rs 默认使用Tree-sitter 的 major-mode，获得更好的语法高亮和代码分析。
+
+major-mode-remap-alist: 将传统 mode 映射到对应的 ts-mode。
+
+#+begin_src elisp
   (use-package treesit
     :ensure nil
     :custom
@@ -779,33 +998,14 @@ https://github.com/zhangjie2012/use-package-document-cn
                     )
                   auto-mode-alist))
     (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
-    ;; (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
-    ;; (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
-    ;; (add-to-list 'major-mode-remap-alist
-    ;;              '(c-or-c++-mode . c-or-c++-ts-mode))
-    ;; (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
+    (add-to-list 'major-mode-remap-alist
+                 '(c-or-c++-mode . c-or-c++-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
     (add-to-list 'major-mode-remap-alist '(css-mode . css-ts-mode))
     (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
     )
-#+end_src
-** init.el 文件尾
-#+BEGIN_SRC emacs-lisp
-
-(provide 'init)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; init.el ends here
-#+END_SRC
-
-* COMMENT code.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle code.el
-:END:
-
-#+begin_src elisp
-  ;;; code.el  -*- lexical-binding: t -*-
-  ;;; Commentary:
-
-  ;;; Code:
 
   (use-package c-ts-mode
     :ensure nil
@@ -816,8 +1016,13 @@ https://github.com/zhangjie2012/use-package-document-cn
     :ensure nil
     :custom
     (go-ts-mode-indent-offset 4))
+#+end_src
 
-  (provide 'code)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; code.el ends here
+** init.el 文件尾
+#+BEGIN_SRC emacs-lisp
+
+(provide 'init)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init.el ends here
 #+END_SRC
+

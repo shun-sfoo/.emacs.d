@@ -30,3 +30,4 @@ rime
 *.elc
 .last-package-update-day
 .venv
+elfeed/
