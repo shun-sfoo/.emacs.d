@@ -474,3 +474,266 @@ cat <<EOF
 {"text": "${weather}", "tooltip": "点击显示完整预报"}
 EOF
 #+end_src
+
+** eden
+
+Eden Prod Keys
+https://switchkeys.io/eden-prod-keys-and-firmware/
+
+location
+
+~/.switch/prod.keys
+
+unzip nsz to nsp eden才能识别
+
+uv run --with nsz nsz -D 'The Legend of Zelda Breath of the Wild[01007EF00011E000][v0].nsz'
+
+** passthrough
+
+https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF
+
+https://github.com/SHORiN-KiWATA/Shorin-ArchLinux-Guide
+
+https://looking-glass.io/docs/B7/
+
+*** smb
+#+begin_src bash
+  sudo pacman -S samba
+  sudo vim /etc/samba/smb.conf
+  
+  sudo smbpasswd -a neo
+  systemctl enable --now smb nmb
+#+end_src
+
+#+begin_src conf
+  [global]
+  workgroup = WORKGROUP
+  server string = MyArch
+  security = user
+  map to guest = bad user
+  # 优化虚拟机访问性能
+  socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=131072 SO_SNDBUF=131072
+
+  [Share]
+  path = /home/neo/Share
+  valid users = neo
+  read only = no
+  browsable = yes
+#+end_src
+
+*** 显卡直通
+
+要确认开启 IOMMU（命令有输出说明开启)
+
+#+begin_src bash
+  sudo dmesg | grep -e DMAR -e IOMMU
+#+end_src
+
+获取显卡的硬件 ID，显卡所在 group 的所有设备的 ID 都记下
+
+#+begin_src bash
+  for d in /sys/kernel/iommu_groups/*/devices/*; do 
+    n=${d#*/iommu_groups/*}; n=${n%%/*}
+    printf 'IOMMU Group %s ' "$n"
+    lspci -nns "${d##*/}"
+  done
+#+end_src
+
+IOMMU Group 13 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation AD103 [GeForce RTX 4070 Ti SUPER] [10de:2705] (rev a1)
+IOMMU Group 13 01:00.1 Audio device [0403]: NVIDIA Corporation AD103 High Definition Audio Controller [10de:22bb] (rev a1)
+
+隔离 GPU
+
+sudo vim /etc/modprobe.d/vfio.conf
+
+写入
+
+options vfio-pci ids=10de:2705,10de:22bb （硬件ID与硬件ID之间用英文逗号隔开）
+
+编辑内核参数让 VFIO-PCI 抢先加载
+
+sudo vim /etc/mkinitcpio.conf
+
+MODULES=() 里面写入 vfio_pci vfio vfio_iommu_type1
+
+HOOKS=() 里面确认有 modconf
+
+重新生成 initramfs
+
+安装 OVMF
+sudo pacman -S --needed edk2-ovmf
+
+*** looking-glass
+
+paru -S looking-glass
+
+KVMFR 内核模块方式的 Looking Glass 性能更好，但是不能用 VirtIO-FS 进行文件共享，需要使用 SMB，这个取舍是值得的
+
+1. 确保已经安装了你使用的内核的头文件。
+sudo pacman -S linux-headers
+paru -S looking-glass-module-dkms   # no rc, no git
+
+2. 加载模块并配置权限
+   
+sudo nvim /etc/modprobe.d/kvmfr.conf
+
+把此处的 128 改成你实际需要的大小
+128M 可以传输4k 非HDR
+options kvmfr static_size_mb=128
+
+用 systemd 加载：
+
+sudo nvim /etc/modules-load.d/kvmfr.conf
+
+# KVMFR Looking Glass module
+kvmfr
+
+设置权限：
+sudo nvim /etc/udev/rules.d/99-kvmfr.rules
+
+SUBSYSTEM=="kvmfr", OWNER="neo", GROUP="kvm", MODE="0660"
+
+然后编辑 QEMU 的 cgroup 设备权限：
+
+sudo vim /etc/libvirt/qemu.conf
+
+搜索 cgroup_device_acl，取消注释后加上 /dev/kvmfr0，注意逗号。
+
+在配置显卡直通（GPU Passthrough）或硬件加速时，修改 /etc/libvirt/qemu.conf 中的 cgroup_device_acl 是一个非常关键的步骤。
+它的核心作用是：允许虚拟机（QEMU 进程）直接访问宿主机上的特定物理硬件设备。
+
+当你手动在 qemu.conf 中取消 cgroup_device_acl 的注释并进行修改时，
+你必须把系统默认需要的设备（如 /dev/null, /dev/kvm 等）全部手动复制一遍保留在里面。
+如果只写一个 /dev/kvmfr0，QEMU 会因为找不到基本的 /dev/kvm 而彻底瘫痪。
+
+cgroup_device_acl =[
+    "/dev/null", "/dev/full", "/dev/zero",
+    "/dev/random", "/dev/urandom",
+    "/dev/ptmx", "/dev/userfaultfd", 
+    "/dev/kvm", "/dev/kqemu",
+    "/dev/rtc","/dev/hpet", "/dev/vfio/vfio",
+    "/dev/kvmfr0"
+]
+
+重启后检查 kvmfr 设备
+
+sudo dmesg | grep kvmfr
+
+应该能看到 kvmfr: creating 1 static devices
+
+ [ 8.209383] kvmfr: loading out-of-tree module taints kernel.
+含义：out-of-tree（树外模块）是指这个驱动代码没有被收录进 Linux 内核的官方源码官方树（Upstream Kernel）。
+因为 KVMFR 是 Looking Glass 团队独立开发的，所以属于树外模块。
+
+什么是 taints kernel（污染内核）：这听起来很唬人，但它只是内核的一个标记机制。
+内核在告诉开发者：“你加载了一个非官方认证的第三方驱动。如果以后系统崩溃了（Kernel Panic），
+去 Linux 社区提 Bug 时，官方维护者可能会因为你用了第三方驱动而拒绝排查。”
+影响：完全没有影响。对于搞显卡直通、用 NVIDIA 官方闭源驱动（它也会污染内核）、或者用 AUR 编译驱动的 Linux 用户来说，这属于日常现象。
+[ 8.209386] kvmfr: module verification failed: signature and/or required key missing - tainting kernel
+含义：模块签名验证失败，缺少签名或必需的密钥。
+
+原因：你的系统开启了内核模块签名校验，或者启用了 Secure Boot（安全启动）。
+因为 KVMFR 是你通过 AUR（或者手动）在本地动态编译出来的（通过 DKMS），它没有经过受信任证书机构（如 Arch 官方）的数字签名。
+
+影响：只要你的系统没有强制开启 CONFIG_MODULE_SIG_FORCE（强制要求所有模块必须有合法签名才能加载），
+内核就只是口头警告一下，然后继续放行加载。
+
+[ 8.212477] kvmfr: creating 1 static devices
+含义：关键步骤成功！KVMFR 模块正在内核中成功创建 1 个静态字符设备。
+[ 8.218469] kvmfr: kvmfr_module_init: module loaded 
+模块初始化函数执行完毕，模块已成功加载到内核中。
+
+ls -l /dev/kvmfr0
+
+*** 虚拟机配置
+
+打开 virt-manager，点击编辑 > 首选项，勾选启用 XML 编辑。
+
+添加设备
+如果使用 KVMFR 的话
+XML 最顶部应该有一行 <domain type='kvm'> 加上 namespace， 一定要加上namespace, 不然无法识别配置语法，
+导致后面增加设备的配置不生效
+
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+
+然后在最底部 </domain> 上面一行插入
+
+<qemu:commandline>
+  <qemu:arg value="-device"/>
+  <qemu:arg value="{'driver':'ivshmem-plain','id':'shmem0','memdev':'looking-glass'}"/>
+  <qemu:arg value="-object"/>
+  <qemu:arg value="{'qom-type':'memory-backend-file','id':'looking-glass','mem-path':'/dev/kvmfr0','size':134217728,'share':true}"/>
+</qemu:commandline>
+
+把 'size':134217728 的数值改成你实际的数值，计算方法是：你之前计算出来的内存（MB）*1024*1024
+
+增加键鼠
+根据 looking-glass 文档
+把 video设置为vga 这个通过virt-manager设置
+删除 <input type='tablet'/>
+
+创建
+<input type='mouse' bus='virtio'/>
+<input type='keyboard' bus='virtio'/>
+实测添加一个 virtio keyboard就可以了
+音频不用额外添加
+
+修改配置通过
+sudo virsh edit win10
+
+一定要sudo 否则会提示找不到
+
+window端下载 looking-glass linux下载的最新release, window也同步下载就行
+另外 looking-glass 一定要配置 设置逃出按键， 因为通过looking-glass可以就无法使用鼠标，当时用逃出键进行捕获后
+是可以用鼠标和键盘的。
+
+nvim ~/.config/looking-glass/client.ini
+
+[input]
+escapeKey=KEY_RIGHTCTRL
+
+***  virtual driver manager
+到这一步就可以用looking-glass 进行操作了， 但是会发现无法改分辨率， vga设置成一个极低的分别率且无法改动
+
+要使looking-glass 能变成4k 需要虚拟出一个显示器
+
+在windows中
+https://github.com/VirtualDrivers/Virtual-Display-Driver/releases
+
+下载虚拟驱动， 注意此处有坑点， 要同时签名的驱动 signed-Driver-x64, 在驱动管理器中去更新
+这个签名驱动， 然后在控制台重启时 在驱动管理器中启动设备。
+不然vdd控制台会报错， 然后无法虚拟出驱动器。
+
+关于两个显示器的设置， 2 为虚拟显示器设置为4k， 然后选择仅在显示2上显示。 如果出现鼠标无法操作的情况
+可以用键盘切换， 当设置仅在显示器2上显示时， 无法保存， 立即用looking-glass打开， 保存设置。
+
+looking-glass 会提示cpu的配置有问题， 改成如下设置
+<cpu mode='host-passthrough' check='none'>
+  <topology sockets='1' dies='1' cores='8' threads='2'/>
+  <feature policy='require' name='topoext'/>
+</cpu>
+
+关键参数解释：
+
+    mode='host-passthrough'：必须是这个模式，把你的 AMD 7950X 所有的指令集和特性原封不动地透传给 Windows。
+
+    threads='2'：这个必须设为 2。AMD 的超线程（SMT）就是每个核心 2 个线程。
+
+    name='topoext'：这是 AMD 专属的拓扑扩展。如果不加这一行，Windows 进系统后会把
+    
+    这 16 个线程识别为 16 个“没有血缘关系”的独立单核 CPU，导致缓存（L3 Cache）调度一团糟，引发 Looking Glass 画面撕裂和卡顿。
+
+
+ 优化
+ memballoon
+
+显卡直通热切换
+
+在虚拟机里确认虚拟机网关地址
+
+CMD 运行 ipconfig 命令，一般是 192.168.122.1
+
+在虚拟机里连接 SMB
+
+打开 Win 的文档管理器，在地址栏输入 \\192.168.122.1，回车后会弹出密码框。
+
