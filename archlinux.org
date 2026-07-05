@@ -4,7 +4,37 @@
 增量修改配置的配置文件，像hyprland.config 不生成，只记录配置项，然后复制修改
 字体等二进制文件，复制到对应目录
 
-* npm 全局安装应用配置
+** 免密操作
+
+免输密码
+
+#+begin_src sh
+  sudo nvim /etc/sudoers.d/00_neo
+  neo ALL=(ALL) NOPASSWD: ALL
+#+end_src
+
+免登录
+
+https://wiki.archlinux.org/title/Getty
+
+#+begin_src sh
+  sudo nvim /etc/systemd/system/getty@tty1.service.d/autologin.conf
+  # content
+  [Service]
+  ExecStart=
+  ExecStart=-/usr/bin/agetty --noreset --noclear --autologin neo - ${TERM}
+#+end_src
+
+** 生成本地ssh密钥
+#+begin_src bash
+  ssh-keygen -t rsa -C "ganymede0915@gmail.com"
+  # git clone 切换成 ssh
+  # To change an existing repository from HTTPS to SSH, you use the git remote set-url command.
+  git remote set-url origin git@github.com:shun-sfoo/.emacs.d.git
+  git remote -v
+#+end_src
+
+** npm 全局安装应用配置
 
 使用用户级 npm 全局目录
 #+begin_src bash
@@ -15,7 +45,7 @@
   npm install -g typescript-language-server typescript @biomejs/biome
 #+end_src
 
-* 使用uv作为python工具流
+** 使用uv作为python工具流
 1. emacs的basedpyright会识别.venv中的包，所以无需在配置emacs
 2. compile 命令中通过 uv run 执行python， 也无需管理emacs配置
 3. uv下载包的命令， uv add 会自动创建.venv 下载也会下载到虚拟环境中
@@ -35,7 +65,7 @@
   uv run main.py
 
 
-* 备份到移动硬盘的命令
+** 备份到移动硬盘的命令
 
 #+begin_src bash
   sudo rsync -ah --no-o --no-g --info=progress2 source_dir/ target_dir/
@@ -58,7 +88,7 @@
 重要：/源文件夹路径/ 后面的斜杠表示“复制该文件夹里面的内容”。如果不加斜杠，会把“源文件夹”本身也拷贝到目标位置，导致层级多了一层（例如：/dest/源文件夹/...）。
 
 
-* haskell 工具
+** haskell 工具
 haskell 工具会用到两个 pandoc 和 shellcheck 如果直接用arch仓库的包，会带来海量的依赖，
 
 因此跟 uv 和 rustup 一样 安装 ghcup 使用 cabal 源码编译安装
@@ -83,7 +113,8 @@ haskell 工具会用到两个 pandoc 和 shellcheck 如果直接用arch仓库的
 
 注意 ShellCheck的大小写 下载就可以使用了
 
-** zshrc
+** 配置文件
+*** zshrc
 
 #+begin_src bash :tangle ~/.zshrc
 export HISTFILE=~/.zsh_history
@@ -146,13 +177,13 @@ pacup() {
 
 #+end_src
 
-** zprofile
+*** zprofile
 
 #+begin_src bash :tangle ~/.zprofile
 [ "$(tty)" = "/dev/tty1" ] && exec start-hyprland
 #+end_src
 
-** fontconfig
+*** fontconfig
 
 #+begin_src xml :tangle ~/.config/fontconfig :mkdirp yes
 <?xml version="1.0"?>
@@ -191,7 +222,7 @@ pacup() {
   </fontconfig>
 #+end_src
 
-** ghostty
+*** ghostty
 
 #+begin_src config :tangle ~/.config/ghostty/config.ghostty :mkdirp yes
 theme = TokyoNight Storm
@@ -203,56 +234,26 @@ background-blur = true
 copy-on-select = clipboard
 #+end_src
 
-** hyprland
+*** hyprland
 
-#+begin_src config
-monitor=,2520x1680@120.00Hz,auto,1.75,bitdepth, 10
-monitor = desc:AOC U2790B 0x00006734, preferred, 0x0, auto, bitdepth, 10
-#monitor = desc:Shenzhen Soogeen Electronics Co. LTD. L01N8A 0x01348C5C, preferred, 2560x0, 1, transform, 1
-monitor = desc:Shenzhen Soogeen Electronics Co. LTD. L01N8A 0x01348C5C, disable
+#+begin_src lua
+  local menu = "tofi-drun --drun-launch=true --font $HOME/.local/share/fonts/Operator_Mono_with_Lig/OperatorMonoSSmLig-Book.otf"
   
-# unscale XWayland
-xwayland {
-  force_zero_scaling = true
-}
-
-# toolkit-specific scale
-env = GDK_SCALE,2
-env = XCURSOR_SIZE,32
-
-$terminal = ghostty
-$menu = tofi-drun --drun-launch=true --font $HOME/.local/share/fonts/Operator_Mono_with_Lig/OperatorMonoSSmLig-Book.otf
-
-exec-once = waybar
+  hl.config({
+  xwayland = {
+    force_zero_scaling = true
+  }
   
-# "Smart gaps" / "No gaps when only"
+  hl.env("GDK_SCALE", "2")
+
+  hl.on("hyprland.start", function () 
+    hl.exec_cmd("waybar")
+  end)
   
-input {
-    kb_options = ctrl:nocaps
-    touchpad {
-        natural_scroll = true
-        disable_while_typing = true
-    }
-}
-
-bind = $mainMod, return, exec, $terminal
-
-windowrule {
-    name = rustdesk-remote
-    match:title = .*Remote.*
-
-    workspace = 4
-}
-
-windowrule {
-    name = rustdesk-transfer
-    match:title = .*Transfer.*
-
-    workspace = 8
-}  
+})
 #+end_src
 
-** tofi
+*** tofi
 
 #+begin_src config  :tangle ~/.config/tofi/config :mkdirp yes
 width = 100%
@@ -267,9 +268,9 @@ font = monospace
 background-color = #000A
 #+end_src
 
-** waybar
+*** waybar
 
-*** config.jsonc
+**** config.jsonc
 
 #+begin_src json :tangle ~/.config/waybar/config.jsonc :mkdirp yes
 // -*- mode: jsonc -*-
@@ -367,7 +368,7 @@ background-color = #000A
 #+end_src
 
 
-*** style.css
+**** style.css
 
 #+begin_src css :tangle ~/.config/waybar/style.css :mkdirp yes
   @import "/etc/xdg/waybar/style.css";
@@ -435,9 +436,9 @@ background-color = #000A
 #+end_src
 
 
-*** srcipts
+**** srcipts
 
-**** checkupdate
+***** checkupdate
 
 #+begin_src bash :tangle ~/.config/waybar/scripts/check-updates.sh :mkdirp yes
 #!/usr/bin/env sh
@@ -464,7 +465,7 @@ jq -c -n \
 
 #+end_src
 
-**** weather 
+***** weather 
 
 #+begin_src bash :tangle ~/.config/waybar/scripts/weather.sh :mkdirp yes
 #!/usr/bin/env sh
@@ -473,5 +474,3 @@ cat <<EOF
 {"text": "${weather}", "tooltip": "点击显示完整预报"}
 EOF
 #+end_src
-
-** TODO tmux
