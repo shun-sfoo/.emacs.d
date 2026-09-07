@@ -177,9 +177,7 @@ read-process-output-max: 增大进程输出缓冲区到 4MB，LSP 等子进程�
     (load-prefer-newer t)
     :config
     (setq read-process-output-max (* 4 1024 1024))
-    (when (eq system-type 'darwin)
-      (setq mac-option-modifier 'meta)
-      (mac-auto-operator-composition-mode t)))
+    )
 
 #+end_src
 
@@ -373,7 +371,6 @@ flymake-show-diagnostics-at-end-of-line nil (>= Emacs 30)：不在行末追加�
 
 #+begin_src elisp
   (use-package which-func
-    
     :ensure nil
     :hook
     (prog-mode . which-function-mode))
@@ -662,12 +659,6 @@ paredit: 结构化编辑括号，自动保持括号平衡。unbind RET 是因为
     :hook
     (emacs-lisp-mode . aggressive-indent-mode))
 
-  (use-package highlight-defined
-    :ensure t
-    :commands highlight-defined-mode
-    :hook
-    (emacs-lisp-mode . highlight-defined-mode))
-
   (use-package paredit
     :ensure t
     :commands paredit-mode
@@ -681,6 +672,11 @@ paredit: 结构化编辑括号，自动保持括号平衡。unbind RET 是因为
     :init
     (ef-themes-take-over-modus-themes-mode 1)
     (modus-themes-load-theme 'ef-bio))
+
+  (use-package elisp-mode
+    :ensure nil
+    :custom
+    (elisp-fontify-semantically t))
 #+end_src
 
 ** org
@@ -802,13 +798,6 @@ disable-mouse: 全局禁用鼠标操作。纯键盘工作流不需要鼠标，�
     (global-disable-mouse-mode))
 #+end_src
 
-
-*** Markdown 编辑
-为 .md 文件启用 markdown-mode，提供语法高亮、预览等基础编辑能力。
-#+begin_src elisp
-  (use-package markdown-mode
-    :ensure t)
-#+end_src
 
 *** RSS 阅读
 Elfeed 是 Emacs 内置的 RSS 客户端。这些 feed 包括技术博客、社区、资讯聚合，涵盖编程语言、Emacs、个人博客等领域。
@@ -965,47 +954,15 @@ major-mode-remap-alist: 将传统 mode 映射到对应的 ts-mode。
     :ensure nil
     :custom
     (treesit-font-lock-level 4)
-    :preface
-    (defun mp-setup-install-grammars ()
-      "Install Tree-sitter grammars if they are absent."
-      (interactive)
-      (dolist (grammar
-               '(
-                 (bash . ("https://github.com/tree-sitter/tree-sitter-bash"))
-                 (c .  ("https://github.com/tree-sitter/tree-sitter-c"))
-                 (cpp . ("https://github.com/tree-sitter/tree-sitter-cpp"))
-                 (css . ("https://github.com/tree-sitter/tree-sitter-css"))
-                 (go . ("https://github.com/tree-sitter/tree-sitter-go"))
-                 (html . ("https://github.com/tree-sitter/tree-sitter-html"))
-                 (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"))
-                 (json . ("https://github.com/tree-sitter/tree-sitter-json"))
-                 (python . ("https://github.com/tree-sitter/tree-sitter-python"))
-                 (rust . ("https://github.com/tree-sitter/tree-sitter-rust"))
-                 (toml . ("https://github.com/ikatyang/tree-sitter-toml"))
-                 ))
-        (add-to-list 'treesit-language-source-alist grammar)
-        (unless (treesit-language-available-p (car grammar))
-          (treesit-install-language-grammar (car grammar)))))
+    (treesit-enabled-modes t)
     :config
-    (mp-setup-install-grammars)
     (setq auto-mode-alist
           (append '(
-                    ("\\.js\\'"  . js-ts-mode)
-                    ("\\.html\\'"  . html-ts-mode)
                     ("\\.jsonc\\'" . json-ts-mode)
-                    ("\\.toml\\'" . toml-ts-mode)
-                    ("\\.rs\\'" . rust-ts-mode)
                     )
                   auto-mode-alist))
-    (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
-    (add-to-list 'major-mode-remap-alist
-                 '(c-or-c++-mode . c-or-c++-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(css-mode . css-ts-mode))
-    (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
     )
+
 
   (use-package c-ts-mode
     :ensure nil
