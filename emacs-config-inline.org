@@ -1,0 +1,863 @@
+#+TITLE: Emacs Configuration
+#+DATE: 2025/10/24 21:44:50
+
+* 查表
+查 repeat-map
+
+~M-x describe-repeat-maps~
+
+查操作其他窗口的行为
+~C-x 4 C-h~
+
+查当前缓冲区的语法表
+~C-h s~
+
+* org babel
+
+~org-babel-tangle~ to generate config elisp
+
+~C-c '~ to edit source code
+
+* 在 linux 使用 emacs-rime 替代系统输入法
+
+#+begin_src bash
+  sudo pacman -S librime rime-double-pinyin
+#+end_src
+
+#+begin_src yaml
+# default.custom.yaml
+patch:
+  schema_list:
+    - schema: "double_pinyin_flypy"
+#+end_src
+
+#+begin_src yaml
+# double_pinyin_flypy.custom.yaml
+patch:
+  "switches/@2/reset": 1  #表示將 switcher 列表中的第3個元素的初始值重設爲狀態1
+#+end_src
+
+* 寄存器使用 register
+
+emacs 寄存器 register,  实现特定内容复制到特定寄存器， 当前的修改不影响特定寄存器中的内容
+
+1. 保存选中文本到指定寄存器：
+选中区域后按下 ~C-x r s <char>~ （例如  ~C-x r s a~ ，表示保存到寄存器 a）。
+
+2. 读取/粘贴指定寄存器的内容：
+按下 ~C-x r i <char>~ （例如 ~C-x r i a~ ，将寄存器 a 中的文本插入到光标处
+
+* use-package 使用
+
+https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
+
+https://github.com/zhangjie2012/use-package-document-cn
+
+更新 package list 通过 package-refresh-contents
+
+** 代码展开
+
+#+begin_src emacs-lisp
+  (let ((use-package-expand-minimally t))
+    (pp-emacs-lisp-code
+     (macroexpand-all
+      '(use-package foo
+         :config (+ 1 2)
+         :init (+ 3 4)
+         :config (+ 5 6)
+         :init (+ 7 9)))))
+#+end_src
+
+结果
+
+#+begin_src emacs-lisp
+  (progn
+    (+ 3 4) (+ 7 9)
+    (require 'foo nil nil)
+    (+ 1 2) (+ 5 6)
+    t)
+
+#+end_src
+
+** 属性解释
+
+`:config` 中的代码在包加载之后才能被加载
+`:init` 在包前执行的代码
+`:custom` 类似于通过 custom-set-variable 设置
+
+** 找到配置项属于那个包
+
+通过 `C-h f` 和 `C-h v` 查看函数和变量在那个包中，如果是c编写的就用 `use-packge emacs`吧
+虽然可以统一放在`use-package simple`中，但会导致simple下的代码膨胀，还是分别放置吧
+
+* early-init.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle early-init.el
+:END:
+
+#+begin_src emacs-lisp
+  ;;; early-init.el --- Emacs pre-initialization config -*- lexical-binding: t -*-
+  ;;; Commentary:
+  ;;; Code:
+
+  (setq gc-cons-threshold most-positive-fixnum)  ;; 启动前一次性分配最大堆内存，减少 GC 卡顿
+  (setq gc-cons-percentage 1.0)
+
+  (setq package-enable-at-startup nil)  ;; 启动早期不加载 package.el，加速启动
+  (setq package-quickstart nil)         ;; 不从包缓存加载
+
+  (push '(menu-bar-lines . 0) default-frame-alist)  ;; 禁止展示菜单栏
+  (push '(tool-bar-lines . 0) default-frame-alist)  ;; 禁止展示工具栏
+  (push '(vertical-scroll-bars) default-frame-alist)  ;; 禁止展示纵向滚动条
+
+  (setq frame-inhibit-implied-resize t)  ;; 禁止自动缩放窗口
+
+  (menu-bar-mode -1)  ;; 关闭菜单栏模式
+  (tool-bar-mode -1)  ;; 关闭工具栏模式
+  (scroll-bar-mode -1)  ;; 关闭滚动条模式
+  (setq inhibit-splash-screen t)  ;; 关闭启动画面
+  (setq use-file-dialog nil)  ;; 禁用文件对话框
+
+  (setq comp-deferred-compilation nil)  ;; 启动阶段不进行延迟编译
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))  ;; 启动时最大化窗口
+  (provide 'early-init)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; early-init.el ends here
+#+end_src
+
+* init.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init.el
+:END:
+
+=init.el= 是Emacs的主要配置文件。
+
+** init.el 文件头
+#+BEGIN_SRC emacs-lisp
+;;; init.el --- The main init entry for Emacs -*- lexical-binding: t -*-
+;;; Commentary:
+
+;;; Code:
+
+#+END_SRC
+
+** package.el setting
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'windows-nt) "no" "init.el")
+:END:
+#+begin_src emacs-lisp
+  (use-package package
+    :ensure nil  ;; package.el 内置，显式 :ensure nil 避免 use-package 重复 require
+    :config
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))  ;; 使用 MELPA 源，更新比 ELPA 更及时、对第三方包更友好
+    (unless (bound-and-true-p package--initialized)
+      (package-initialize)))  ;; 确保包管理器已初始化
+
+  (defun my/package-ugprade-everything ()
+    "Refresh package contents and upgrade all packages."
+    (interactive)
+    (package-refresh-contents)
+    (package-upgrade-all)
+    (package-vc-upgrade-all)
+    )
+#+end_src
+** default config
+
+*** 核心编辑器行为
+#+begin_src emacs-lisp
+  (use-package emacs
+    :ensure nil  ;; emacs 是虚拟包，代表 Emacs C 层的全局设置
+    :custom
+    (bidi-display-reordering 'left-to-right)  ;; 纯英文/代码无需双向文本渲染，关闭可显著提高渲染性能
+    (bidi-paragraph-direction 'left-to-right)
+    (bidi-inhibit-bpa t)  ;; 禁用 bidi 括号配对，进一步降低渲染开销
+    (redisplay-skip-fontification-on-input t)  ;; 输入时不阻塞 redisplay，避免打字卡顿
+    (cursor-in-non-selected-windows nil)  ;; 非选中窗口不画光标，减少重绘
+    (fast-but-imprecise-scrolling t)  ;; 滚动优先速度，牺牲精确 fontify，需要时可手动触发
+    (tab-width 4)  ;; 个人缩进习惯
+    (use-short-answers t)  ;; y/n 代替 yes/no，提高交互效率
+    (indent-tabs-mode nil)  ;; 强制用空格缩进，避免混用 tab/space 导致对齐问题
+    (load-prefer-newer t)  ;; 有 .el 与 .elc 时优先加载较新者，避免残留 .elc 用旧代码
+    :config
+    (setq read-process-output-max (* 4 1024 1024))  ;; 进程输出缓冲区增至 4MB，减少 LSP 子进程 read 调用
+    )
+
+#+end_src
+
+***  手册页
+ #+begin_src emacs-lisp
+   (use-package man
+     :ensure nil
+     :custom
+     (Man-notify-method 'aggressive))  ;; 打开 man page 时立即显示，无需手动切换窗口
+ #+end_src
+
+*** 差异比较
+#+begin_src emacs-lisp
+  (use-package ediff
+    :ensure nil
+    :custom
+    (ediff-window-setup-function 'ediff-setup-windows-plain))  ;; 在单独 frame 打开 Ediff，避免污染当前工作窗口布局
+#+end_src
+
+*** 项目管理
+ #+begin_src emacs-lisp
+   (use-package project
+     :ensure nil
+     :custom
+     (project-vc-extra-root-markers '("Cargo.toml")))  ;; 将含 Cargo.toml 的目录识别为项目根目录，Rust 项目常无 .git 子模块
+ #+end_src
+
+*** 代码可视化
+#+begin_src emacs-lisp
+  (use-package whitespace
+    :hook (prog-mode . whitespace-mode)   ;; prog-mode 下启用空白可视化
+    :custom
+    (whitespace-style '(face indentation tabs tab-mark))  ;; 高亮缩进空格与多余 tab，并给 tab 加 » 标记
+    (whitespace-display-mappings
+     '((tab-mark 9 [187 9] [92 9]))))
+#+end_src
+
+*** 书签
+ #+begin_src emacs-lisp
+   (use-package bookmark
+     :ensure nil
+     :custom
+     (bookmark-save-flag 1))  ;; 每次书签操作后自动保存到文件，防止意外退出丢失书签
+ #+end_src
+
+*** 词典
+#+begin_src emacs-lisp
+  (use-package dictionary
+    :ensure nil
+    :bind ("M-#" . dictionary-lookup-definition))  ;; M-# 不与常用 keymap 冲突，且 # 形似字典符号
+#+end_src
+
+*** 编辑体验
+#+begin_src emacs-lisp
+  (use-package hl-line
+    :ensure nil
+    :init
+    (global-hl-line-mode -1)  ;; 不启用全局模式，避免与其他 major-mode 自带高亮冲突
+    :preface
+    (defun my/hl-line-activate ()  ;; 进入 major-mode 后按需启用，排除 vterm（终端不需要行高亮）
+      (unless (derived-mode-p 'vterm-mode)
+        (hl-line-mode 1)))
+    :hook (after-change-major-mode . my/hl-line-activate))
+
+  (use-package so-long
+    :ensure nil
+    :hook
+    (after-init . global-so-long-mode))  ;; 超长行文件自动关闭耗时 minor mode，避免卡死
+
+  (use-package delsel
+    :ensure nil
+    :hook (after-init . delete-selection-mode))  ;; 选中文本后直接键入替换选区
+
+  (use-package icomplete
+    :ensure nil
+    :hook (after-init . fido-vertical-mode))  ;; 垂直列表补全候选，轻量且 Emacs 30 内置
+
+  (use-package display-line-numbers
+    :ensure nil
+    :hook (after-init . global-display-line-numbers-mode)
+    :custom
+    (display-line-numbers-type 'relative))  ;; relative 行号，组合命令无需心算行数差值
+#+end_src
+
+*** 补全与按键提示
+   #+begin_src emacs-lisp
+     (use-package completion-preview
+       :ensure nil
+       :bind (:map completion-preview-active-mode-map
+                   ("M-n" . completion-preview-next-candidate)
+                   ("M-p" . completion-preview-prev-candidate))
+       :hook
+       (after-init . global-completion-preview-mode))
+
+     (use-package which-key
+       :ensure nil
+       :hook
+       (after-init . which-key-mode))  ;; 输入前缀键后弹窗提示可用快捷键
+   #+end_src
+
+*** 滚动
+#+begin_src emacs-lisp
+  (use-package pixel-scroll
+    :ensure nil
+    :if (display-graphic-p)  ;; 仅图形界面启用
+    :hook
+    (after-init . pixel-scroll-precision-mode))  ;; 像素级平滑滚动，比逐行跳跃更流畅
+#+end_src
+
+*** 文件操作
+#+begin_src emacs-lisp
+  (use-package files
+    :ensure nil
+    :hook
+    (after-init . auto-save-visited-mode)  ;; focus-out 或 idle 时自动保存到磁盘，比临时 autosave 文件更安全
+    (after-save . executable-make-buffer-file-executable-if-script-p)  ;; 脚本保存时自动加可执行权限
+    :custom
+    (make-backup-files nil)  ;; 不生成 file~ 备份文件，版本控制已承担
+    (auto-save-default t)
+    (auto-save-visited-interval 5)
+    (auto-save-interval 300)  ;; 每 300 次按键触发自动保存
+    (auto-save-timeout 30))  ;; 或 30 秒空闲触发
+#+end_src
+
+*** 重复命令
+#+begin_src emacs-lisp
+  (use-package repeat
+    :ensure nil
+    :hook (after-init . repeat-mode)  ;; 按完 C-c l n 后只需按 n/p 即可连续跳转
+    :config
+    (defvar eglot-error-repeat-map  ;; 定义 n/p 分别对应 next/prev error
+      (let ((map (make-sparse-keymap)))
+        (define-key map "n" #'flymake-goto-next-error)
+        (define-key map "p" #'flymake-goto-prev-error)
+        map)
+      "Keymap to repeat flymake error navigation.")
+    (put #'flymake-goto-next-error 'repeat-map 'eglot-error-repeat-map)  ;; 挂到 repeat-map 属性，这是 repeat-mode 识别可重复命令的标准做法
+    (put #'flymake-goto-prev-error 'repeat-map 'eglot-error-repeat-map))
+#+end_src
+
+*** 编程辅助
+
+#+begin_src emacs-lisp
+  (use-package which-func
+    :ensure nil
+    :hook
+    (prog-mode . which-function-mode))  ;; mode-line 显示当前函数/类名，方便定位代码上下文
+
+  (use-package elec-pair
+    :ensure nil
+    :hook
+    (after-init . electric-pair-mode))  ;; 输入左括号时自动补全另一半
+
+  (use-package electric
+    :ensure nil
+    :hook
+    (after-init . electric-indent-mode))  ;; 回车后自动缩进到正确位置
+
+  (use-package flymake
+    :ensure nil
+    :hook
+    (prog-mode . flymake-mode)  ;; Emacs 内置即时语法检查，与 eglot 配合
+    :config
+    (setq flymake-show-diagnostics-at-end-of-line nil)  ;; 不在行末追加诊断，避免长行被撑长，改用 mode-line/fringe 指示
+    )
+#+end_src
+
+*** 搜索
+
+#+begin_src emacs-lisp
+  (use-package isearch
+    :ensure nil
+    :custom
+    (isearch-lazy-count t))  ;; isearch 时显示匹配总数与当前位置，方便评估搜索范围
+#+end_src
+
+*** 基础编辑
+
+#+begin_src emacs-lisp
+  (use-package simple
+    :ensure nil
+    :preface
+    (defun my/mode-line-stats ()  ;; mode-line 显示行号、列号、文件大小
+      (line-number-mode)
+      (column-number-mode)
+      (size-indication-mode))
+    (defun my/prettify-symbols ()  ;; Elisp 中将 lambda 显示为 λ，增加可读性
+      (prettify-symbols-mode))
+    :hook (after-init . my/mode-line-stats)
+    :hook (emacs-lisp-mode . my/prettify-symbols)
+    :custom
+    (save-interprogram-paste-before-kill t)  ;; kill 前先把剪贴板内容存入 kill-ring
+    (kill-do-not-save-duplicates t))  ;; 相同内容不重复入 kill-ring
+#+end_src
+
+*** 自动刷新
+
+#+begin_src emacs-lisp
+  (use-package autorevert
+    :ensure nil
+    :commands (auto-revert-mode global-auto-revert-mode)
+    :hook
+    (after-init . global-auto-revert-mode)  ;; 文件在 Emacs 外被修改后自动重载缓冲区
+    :custom
+    (global-auto-revert-non-file-buffers t)  ;; 也刷新 Dired、Buffer Menu 等非文件缓冲区
+    (auto-revert-interval 3)  ;; 每 3 秒检查一次
+    (auto-revert-remote-files nil)  ;; 远程文件不自动刷新，避免网络 IO
+    (auto-revert-use-notify t)  ;; 优先使用 inotify/kqueue 监听
+    (auto-revert-avoid-polling nil)  ;; notify 不可用时允许回退到轮询
+    (auto-revert-verbose t))  ;; 自动重载时显示消息
+#+end_src
+
+*** 文件浏览
+
+#+begin_src emacs-lisp
+  (use-package dired
+    :ensure nil
+    :custom
+    (dired-dwim-target t)  ;; 复制/移动时默认目标为对面窗口目录，减少路径输入
+    (dired-auto-revert-buffer t))  ;; 外部变更后自动刷新 Dired 缓冲区
+
+  (use-package esh-mode
+    :ensure nil
+    :custom
+    (eshell-scroll-to-bottom-on-input 'this))  ;; 输入命令时自动滚动到 buffer 末尾
+#+end_src
+
+*** 窗口管理
+
+#+begin_src emacs-lisp
+  (use-package window
+    :ensure nil
+    :custom
+    (switch-to-buffer-in-dedicated-window 'pop)  ;; 专用窗口禁止 switch-to-buffer，避免意外覆盖其内容
+    (switch-to-buffer-obey-display-actions t)  ;; 让 switch-to-buffer 也遵守 display-buffer-alist 规则
+    (scroll-conservatively 101)  ;; 光标到窗口边界时只滚动最少行数
+    (scroll-margin 0)
+    (scroll-preserve-screen-position t)  ;; 保持阅读连续性，不跳跃式滚动
+    :config
+    (setq auto-window-vscroll nil)  ;; 禁止垂直微滚动，避免行部分可见时渲染问题
+    (add-to-list 'display-buffer-alist
+                 '("^\\*Dictionary\\*"  ;; 字典放左侧边栏，宽 70，方便边看边输
+                   (display-buffer-in-side-window)
+                   (side . left)
+                   (window-width . 70)))
+    (add-to-list 'display-buffer-alist
+                 '("\\*Help\\*"  ;; Help 优先重用已有窗口，没有才弹新窗口
+                   (display-buffer-reuse-window display-buffer-pop-up-window)))
+    )
+#+end_src
+
+*** 缓冲区管理
+
+#+begin_src emacs-lisp
+  (use-package ibuffer
+    :ensure nil
+    :bind ([remap list-buffers] . #'ibuffer-list-buffers)  ;; 用 ibuffer 替代 list-buffers，支持分组、过滤、列排序
+    :custom
+    (ibuffer-movement-cycle nil)  ;; 到底/顶部就停住，不循环滚动
+    (ibuffer-old-time 24))  ;; 超过 24 小时未访问标记为 old，方便清理
+#+end_src
+
+*** 迷你缓冲区
+
+#+begin_src emacs-lisp
+  (use-package minibuffer
+    :ensure nil
+    :custom
+    (completion-cycle-threshold 3)  ;; 候选数 <= 3 时循环选择
+    (completion-category-overrides '((file (styles . (partial-completion)))))  ;; f/o/b → foo/bar/baz 缩写补全
+    (completions-detailed t))  ;; 补全列表显示更多信息（如文档、类型）
+#+end_src
+
+*** 代码导航
+
+#+begin_src emacs-lisp
+  (use-package xref
+    :ensure nil
+    :custom
+    (xref-show-definitions-function #'xref-show-definitions-completing-read))  ;; 用 completing-read 选择跳转目标，配合 fido-vertical-mode 体验更好
+#+end_src
+
+*** 会话持久化
+
+#+begin_src emacs-lisp
+  (use-package recentf
+    :ensure nil
+    :commands (recentf-mode recentf-cleanup)
+    :hook
+    (after-init . recentf-mode)  ;; 记录最近打开文件，C-x C-r 快速打开
+    :custom
+    (recentf-auto-cleanup (if (daemonp) 300 'never))  ;; daemon 模式每 300 秒清理，非 daemon 退出时清理
+    (recentf-exclude  ;; 排除压缩文件/图片/autoload 等无关文件
+     (list "\\.tar$" "\\.tbz2$" "\\.tbz$" "\\.tgz$" "\\.bz2$"
+           "\\.bz$" "\\.gz$" "\\.gzip$" "\\.xz$" "\\.zip$"
+           "\\.7z$" "\\.rar$"
+           "COMMIT_EDITMSG\\'"
+           "\\.\\(?:gz\\|gif\\|svg\\|png\\|jpe?g\\|bmp\\|xpm\\)$"
+           "-autoloads\\.el$" "autoload\\.el$"))
+    :config
+    (add-hook 'kill-emacs-hook #'recentf-cleanup -90))
+
+  (use-package savehist
+    :ensure nil
+    :commands (savehist-mode savehist-save)
+    :hook
+    (after-init . savehist-mode)  ;; 保存 minibuffer 历史、kill-ring、mark-ring、搜索历史
+    :custom
+    (savehist-autosave-interval 600)
+    (savehist-additional-variables
+     '(kill-ring
+       register-alist
+       mark-ring global-mark-ring
+       search-ring regexp-search-ring)
+     )
+    )
+
+  (use-package saveplace
+    :ensure nil
+    :commands (save-place-mode save-place-local-mode)
+    :hook
+    (after-init . save-place-mode)  ;; 记住每个文件上次光标位置，重启后回到离开时的位置
+    :custom
+    (save-place-limit 400))  ;; 最多记住 400 个文件的位置
+#+end_src
+
+*** 字体
+**** linux 
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'gnu/linux) "init.el" "no")
+:END:
+#+begin_src emacs-lisp
+  (use-package faces
+    :if (display-graphic-p)  ;; 仅图形界面设置字体
+    :ensure nil
+    :preface
+    (defun my/apply-font (&optional frame)
+      (with-selected-frame (or frame (selected-frame))
+        (progn  ;; Linux: Operator Mono Lig Book 连字 + 霞鹜文楷看中文
+          (set-face-attribute 'default nil :height 130 :font "Operator Mono Lig Book Light")
+          (set-face-attribute 'bold nil :height 130 :font "Operator Mono Lig Book")
+          (set-fontset-font t 'han (font-spec :family "LXGW WenKai Mono"))
+          (dolist (charset '(unicode symbol))
+            (set-fontset-font t charset
+                              (font-spec :family "Symbols Nerd Font")
+                              nil 'append))
+          )
+        ))
+    :config
+    (my/apply-font (selected-frame))
+    )
+#+end_src
+
+**** mac
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'darwin) "init.el" "no")
+:END:
+#+begin_src emacs-lisp
+  (use-package faces
+    :if (display-graphic-p)  ;; 仅图形界面设置字体
+    :ensure nil
+    :preface
+    (defun my/apply-font (&optional frame)
+      (with-selected-frame (or frame (selected-frame))
+        (progn  ;; macOS: Inconsolata 等宽 + PingFang SC 显示中文
+          (set-face-attribute 'default nil :family "Inconsolata" :height 180 :weight 'regular)
+          (set-fontset-font t 'han (font-spec :family "PingFang SC"))
+          (dolist (charset '(unicode symbol))  ;; Nerd Font 兜底图标/符号
+            (set-fontset-font t charset
+                              (font-spec :family "Symbols Nerd Font")
+                              nil 'append))
+          )))
+    :config
+    (my/apply-font (selected-frame))
+    )
+#+end_src
+
+** org
+
+*** Org Mode
+#+begin_src emacs-lisp
+  (use-package org-capture
+    :ensure nil
+    :bind  (("C-c c" . org-capture))  ;; C-c c 快速捕获想法
+    :custom
+    (org-capture-templates '(("t" "TODO" entry (file+headline "~/org/gtd.org" "Tasks")  ;; TODO/READING/BLOG 三个模板分别管理任务、阅读、写作
+                              "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)  ;; clock-in/clock-resume 记录时间花费
+                             ("r" "READING" entry (file+headline "~/org/reading.org" "Reading")
+                              "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                             ("b" "BLOG" entry (file+headline "~/org/blog.org" "Blog")
+                              "* TODO %?\n %i\n %a" :clock-in t :clock-resume t)
+                             ))
+    )
+
+  (use-package org-agenda
+    :ensure nil
+    :bind (("C-c a" . org-agenda))  ;; C-c a 打开周/日视图
+    :custom
+    (org-agenda-files '("~/org/gtd.org" "~/org/reading.org" "~/org/blog.org"))  ;; agenda-files 与 capture 保持一致
+    )
+#+end_src
+
+
+** Tree-sitter 语法解析引擎
+
+#+begin_src emacs-lisp
+  (use-package treesit
+    :ensure nil
+    :custom
+    (treesit-font-lock-level 4)  ;; 最高等级语法高亮，用完整 Tree-sitter 查询捕获，比 regex font-lock 更准确
+    (treesit-enabled-modes t)
+    :config
+    (setq auto-mode-alist
+          (append '(
+                    ("\\.jsonc\\'" . json-ts-mode)  ;; jsonc 默认使用 ts-mode，获得更好语法高亮
+                    )
+                  auto-mode-alist))
+    )
+
+  (use-package c-ts-mode
+    :ensure nil
+    :custom
+    (c-ts-mode-indent-offset 2))  ;; C 语言缩进 2 空格
+
+  (use-package go-ts-mode
+    :ensure nil
+    :custom
+    (go-ts-mode-indent-offset 4))  ;; Go 语言缩进 4 空格
+#+end_src
+
+
+* 输入法
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'gnu/linux) "init.el" "no")
+:END:
+#+begin_src emacs-lisp
+  (use-package rime  ;; Linux 下使用中州韵（Rime）输入法
+    :ensure t
+    :custom
+    (default-input-method "rime"))
+#+end_src
+
+* 三方插件
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'windows-nt) "no" "init.el")
+:END:
+
+** org 美化
+
+#+begin_src emacs-lisp
+  (use-package org-modern
+    :ensure t
+    :hook
+    (org-mode . global-org-modern-mode)  ;; 用现代样式美化 Org 标题、列表、检查框，纯 CSS 模拟不改数据结构
+    (org-agenda-finalize . org-modern-agenda)
+    )
+
+#+end_src
+
+** Elisp 开发
+#+begin_src emacs-lisp
+  (use-package aggressive-indent
+    :ensure t
+    :commands aggressive-indent-mode
+    :hook
+    (emacs-lisp-mode . aggressive-indent-mode))  ;; 自动缩进 Elisp 代码，仅对 Emacs Lisp 启用
+
+  (use-package paredit
+    :ensure t
+    :commands paredit-mode
+    :hook
+    (emacs-lisp-mode . paredit-mode)  ;; 结构化编辑括号，自动保持括号平衡
+    :config
+    (define-key paredit-mode-map (kbd "RET") nil))  ;; 卸载 paredit 的 RET，避免与 electric-indent 冲突
+
+  (use-package ef-themes
+    :ensure t
+    :init
+    (ef-themes-take-over-modus-themes-mode 1)
+    (modus-themes-load-theme 'ef-bio))  ;; 使用 ef-bio 主题
+
+  (use-package elisp-mode
+    :ensure nil
+    :custom
+    (elisp-fontify-semantically t))  ;; 按语义高亮 Elisp 函数与变量定义
+#+end_src
+
+** editor
+
+*** PDF 阅读
+
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'gnu/linux) "init.el" "no")
+:END:
+#+begin_src emacs-lisp
+  (use-package pdf-tools
+    :ensure t
+    :mode ("\\.pdf\\'" . pdf-view-mode)  ;; 用 pdf-tools 渲染 PDF，比 DocView 清晰，支持选择/搜索/标注
+    :preface
+    (defun my/pdf-view-setup ()
+      (disable-mouse-mode -1)  ;; 禁用鼠标，避免干扰阅读模式
+      (display-line-numbers-mode -1)  ;; 行号在 PDF 中无意义，关掉
+      (auto-revert-mode t))  ;; PDF 重新编译后自动刷新
+    :hook
+    (pdf-view-mode . my/pdf-view-setup)
+    :config
+    (setq-default pdf-view-display-size 'fit-width)  ;; 页面自适应窗口宽度
+    )
+#+end_src
+
+*** godot
+#+begin_src emacs-lisp
+  (use-package gdscript-mode
+    :vc (:url "git@github.com:godotengine/emacs-gdscript-mode.git"
+              :rev :newest)
+    )
+#+end_src
+
+*** appine
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'darwin) "init.el" "no")
+:END:
+
+#+begin_src emacs-lisp
+  (use-package appine
+    :vc (:url "https://github.com/chaoswork/appine"
+         :rev :newest)
+    :build (("make"))
+    :custom
+    ;; 在 org-mode 中使用 Appine 打开链接
+    (appine-use-for-org-links t)
+    (appine-rss-path "~/.emacs.d/elfeed.org") ;; optional
+    ;; 绑定你喜欢的前缀
+    :bind (("C-x a a" . appine)
+           ("C-x a u" . appine-open-url)
+           ("C-x a o" . appine-open-file)
+           ("C-x a r" . appine-rss))
+    )
+#+end_src
+
+*** 多光标
+#+begin_src emacs-lisp
+  (use-package multiple-cursors  ;; 批量编辑，同时操作多个光标位置的文本
+    :ensure t
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->" . mc/mark-next-like-this)
+           ("C-<" . mc/mark-previous-like-this)
+           ("C-c C-<" . mc/mark-all-like-this)
+           ("C-c m c" . mc/edit-beginnings-of-lines)
+           ("C-c m e" . mc/edit-ends-of-lines))
+    :config
+    (setq mc/list-file (expand-file-name ".mc-lists.el" user-emacs-directory)))  ;; 会话列表存到用户目录，避免污染 git 仓库
+#+end_src
+
+*** 终端与 Shell 集成
+#+begin_src emacs-lisp
+  (use-package ghostel
+    :ensure t)  ;; Ghostty 终端与 Emacs 通过 D-Bus 通信，提供编辑等集成功能
+
+  (use-package exec-path-from-shell
+    :ensure t
+    :config
+    (exec-path-from-shell-initialize))  ;; 从 shell 继承 PATH/MANPATH 等完整环境变量
+
+  (use-package disable-mouse
+    :ensure t
+    :config
+    (global-disable-mouse-mode))  ;; 全局禁用鼠标，纯键盘工作流且避免误触
+#+end_src
+
+
+*** RSS 阅读
+
+#+begin_src emacs-lisp
+  (use-package elfeed  ;; Emacs 内置 RSS 阅读器
+    :ensure t
+    :config
+    (setq elfeed-feeds '(
+                         ("https://hellogithub.com/rss" HelloGitHub 月刊)
+                         ("https://rustcc.cn/rss" Rust.cc)
+                         ("https://www.piglei.com/feeds/latest" piglei)
+                         ("http://xueqiu.com/hots/topic/rss" 今日话题 - 雪球)
+                         ("https://plink.anyfeeder.com/ssapi/matrix" 少数派 -- Matrix)
+                         ("https://www.poor.dev/index.xml" Hi there! on poor.dev)
+                         ("http://liujiacai.net/atom.xml" 主页 on 刘家财的个人网站)
+                         ("http://sspai.me/feed" 少数派 – sspai.me)
+                         ("https://emacs-china.org/latest.rss" Emacs China - 最新话题)
+                         ("https://blog.vaxry.net/feed" Vaxry Blog)
+                         ("http://www.masteringemacs.org/feed/" Mastering Emacs)
+                         ("https://hnrss.org/frontpage" Hacker News: Front Page)
+                         ))
+    )
+#+end_src
+
+
+*** 实用命令
+
+#+begin_src emacs-lisp
+  (use-package crux  ;; 一系列更智能的编辑命令，通过 remap 替换 Emacs 原生命令
+    :ensure t
+    :bind
+    (
+     ([remap kill-line] . crux-smart-kill-line)  ;; kill-line 但保留换行，光标在行尾时反转行为
+     ([remap move-beginning-of-line] . crux-move-beginning-of-line)  ;; 在第一列与缩进起点间切换
+     ([remap keyboard-quit] . crux-keyboard-quit-dwim)  ;; C-g 增强版，minibuffer/buffer 行为更智能
+     ("C-c o" . crux-open-with)  ;; 用外部程序打开当前文件
+     ([(shift return)] . crux-smart-open-line)  ;; 当前行下方插入空行并缩进
+     ("C-S-<return>" . crux-smart-open-line-above)  ;; 当前行上方插入空行并缩进
+     ("C-<backspace>" . crux-kill-line-backwards))  ;; 从光标处删除到行首
+    )
+#+end_src
+
+** programming
+
+*** LSP 语言服务
+#+begin_src emacs-lisp
+  (use-package eglot  ;; Emacs 内置 LSP 客户端，比 LSP-mode 轻量，与 flymake/xref/eldoc 集成更好
+    :ensure nil
+    :hook
+    ((prog-mode . eglot-ensure)  ;; 进入 prog-mode / latex-mode 自动启动 LSP
+     (latex-mode . eglot-ensure)
+     (gdscript-mode-hook . eglot-ensure)
+     )
+    :bind
+    (:map eglot-mode-map  ;; C-c l prefix 是所有 LSP 操作入口，l 取 language 之意
+          ("C-c l l" . eglot-code-action-organize-imports)  ;; 重构高频操作：整理 imports
+          ("C-c l f" . eglot-format)  ;; 格式化代码
+          ("C-c l o" . eglot-code-action-organize-imports)  ;; 整理 imports
+          ("C-c l h" . eldoc)  ;; 代码导航与文档：查看光标处文档
+          ("C-c l i" . eglot-find-implementation)  ;; 跳转实现
+          ("C-c l t" . eglot-find-declaration)  ;; 跳转声明
+          ("C-c l r" . eglot-rename)  ;; 重命名符号
+          ("C-c l a" . eglot-code-actions)  ;; 列出可用代码操作
+          ("C-c l s" . eglot-reconnect)  ;; 服务器管理：重连（调试用）
+          ("C-c l q" . eglot-shutdown)  ;; 关闭 LSP 服务器
+          ("C-c l e" . eglot-events-buffer)  ;; 查看事件日志
+          ("C-c l w" . eglot-stderr-buffer)  ;; 查看 stderr 输出
+          ("C-c l p" . flymake-goto-prev-error)  ;; 上一个诊断，diagnostics 是 Eglot 核心输出
+          ("C-c l n" . flymake-goto-next-error)  ;; 下一个诊断
+          )
+    :config
+    (add-to-list 'eglot-server-programs
+                 '(python-base-mode . ("rass" "basedruff")))  ;; Python: rass（Rust LSP 客户端）+ basedruff（Ruff 包装）
+    (add-to-list 'eglot-server-programs
+                 '(js-base-mode . ("rass" "--" "typescript-language-server" "--stdio" "--" "biome" "lsp-proxy")))  ;; JS 管道链
+    (add-to-list 'eglot-server-programs
+                 '(html-ts-mode . ("biome" "lsp-proxy")))  ;; HTML: biome 直接做 LSP
+    (setq-default eglot-workspace-configuration
+                  '(:texlab (:build (:executable "tectonic"  ;; 用 tectonic 编译，:onSave t 保存即编译，便于即时预览
+                                                 :args ["-X" "compile" "-Z" "shell-escape" "%f"]
+                                                 :onSave t)
+                                    :forwardSearch (:executable "emacsclient"  ;; 用 emacsclient 打开 PDF 并定位源行
+                                                                :args ["--eval" "(pdf-sync-forward-search \"%f\" %l)"])
+                                    :chktex (:onOpen t :onEdit t))))  ;; 打开/编辑时自动检查 LaTeX 语法
+    )
+#+end_src
+
+*** 结构化编辑
+
+#+begin_src emacs-lisp
+  (use-package combobulate  ;; 基于 Tree-sitter 语法树做结构化编辑（移动/变换/选择语法节点），比正则更准确
+    ;;:load-path "~/.emacs.d/lisp-site/combobulate"
+    :vc (:url "https://github.com/mickeynp/combobulate" :branch "main")
+    :custom
+    (combobulate-key-prefix "C-c ,")  ;; 绑定 C-c , 避免与 crux 的 C-c o 冲突
+    :hook (
+           (prog-mode . combobulate-mode)
+           (toml-ts-mode . combobulate-mode)
+           )
+    )
+#+end_src
+
+** init.el 文件尾
+#+BEGIN_SRC emacs-lisp
+
+(provide 'init)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init.el ends here
+#+END_SRC
+
