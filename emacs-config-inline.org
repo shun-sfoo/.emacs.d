@@ -671,7 +671,6 @@ https://github.com/zhangjie2012/use-package-document-cn
 ** editor
 
 *** PDF 阅读
-
 :PROPERTIES:
 :HEADER-ARGS: :tangle (if (eq system-type 'gnu/linux) "init.el" "no")
 :END:
