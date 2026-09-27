@@ -1,24 +1,32 @@
 #+TITLE: Emacs Configuration
 #+DATE: 2025/10/24 21:44:50
 
-* 查表
-查 repeat-map
+* 使用 org 文件生成全平台 emacs 配置
 
-~M-x describe-repeat-maps~
+用于生成全平台的emacs配置，其中 windows 平台不使用插件， 需要的插件从文档中复制， 然后离线拷贝到指定目录中。
 
-查操作其他窗口的行为
-~C-x 4 C-h~
+linux 平台在 emacs 中使用 rime 输入法， 之所以这样是因为如果用 linux 上的输入法的全局按键会跟 emacs配置冲突。
 
-查当前缓冲区的语法表
-~C-h s~
+mac 不使用 pdf-tools 工具， 而是用 appine 这个动态模块， 比 pdf-tools 的功能范围更全面。
 
-* org babel
+[[https://github.com/emacs-tree-sitter/tree-sitter-langs][tree-sitter-langs]] 用于下载已经编译好的 tree-sitter 动态库， 在 wdired 模式下，使用正则匹配替换成 ~libtree-sitter-<lang>.<dll|so>~ 的形式
+
+** 简明笔记
+*** 查表
+
+查 repeat-map ~M-x describe-repeat-maps~
+
+查操作其他窗口的行为 ~C-x 4 C-h~
+
+查当前缓冲区的语法表 ~C-h s~
+
+*** org babel
 
 ~org-babel-tangle~ to generate config elisp
 
 ~C-c '~ to edit source code
 
-* 在 linux 使用 emacs-rime 替代系统输入法
+*** 在 linux 使用 emacs-rime 替代系统输入法
 
 #+begin_src bash
   sudo pacman -S librime rime-double-pinyin
@@ -37,7 +45,7 @@ patch:
   "switches/@2/reset": 1  #表示將 switcher 列表中的第3個元素的初始值重設爲狀態1
 #+end_src
 
-* 寄存器使用 register
+*** 寄存器使用 register
 
 emacs 寄存器 register,  实现特定内容复制到特定寄存器， 当前的修改不影响特定寄存器中的内容
 
@@ -47,7 +55,7 @@ emacs 寄存器 register,  实现特定内容复制到特定寄存器， 当前�
 2. 读取/粘贴指定寄存器的内容：
 按下 ~C-x r i <char>~ （例如 ~C-x r i a~ ，将寄存器 a 中的文本插入到光标处
 
-* use-package 使用
+*** use-package 使用
 
 https://egh0bww1.com/posts/2023-09-02-43-use-use-package-manage-emacs-config/
 
@@ -55,7 +63,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 
 更新 package list 通过 package-refresh-contents
 
-** 代码展开
+**** 代码展开
 
 #+begin_src emacs-lisp
   (let ((use-package-expand-minimally t))
@@ -79,18 +87,19 @@ https://github.com/zhangjie2012/use-package-document-cn
 
 #+end_src
 
-** 属性解释
+**** 属性解释
 
-`:config` 中的代码在包加载之后才能被加载
-`:init` 在包前执行的代码
-`:custom` 类似于通过 custom-set-variable 设置
+~:config~ 中的代码在包加载之后才能被加载
+~:init~ 在包前执行的代码
+~:custom~ 类似于通过 custom-set-variable 设置
 
-** 找到配置项属于那个包
+*** 找到配置项属于那个包
 
-通过 `C-h f` 和 `C-h v` 查看函数和变量在那个包中，如果是c编写的就用 `use-packge emacs`吧
-虽然可以统一放在`use-package simple`中，但会导致simple下的代码膨胀，还是分别放置吧
+通过 ~C-h f~ 和 ~C-h v~ 查看函数和变量在那个包中，如果是c编写的就用 ~use-packge emacs~ 吧
 
-* early-init.el
+虽然可以统一放在 ~use-package simple~ 中，但会导致simple下的代码膨胀，还是分别放置吧
+
+** early-init.el
 :PROPERTIES:
 :HEADER-ARGS: :tangle early-init.el
 :END:
@@ -124,15 +133,10 @@ https://github.com/zhangjie2012/use-package-document-cn
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;; early-init.el ends here
 #+end_src
-
-* init.el
+** init.el 文件头
 :PROPERTIES:
 :HEADER-ARGS: :tangle init.el
 :END:
-
-=init.el= 是Emacs的主要配置文件。
-
-** init.el 文件头
 #+BEGIN_SRC emacs-lisp
 ;;; init.el --- The main init entry for Emacs -*- lexical-binding: t -*-
 ;;; Commentary:
@@ -140,8 +144,14 @@ https://github.com/zhangjie2012/use-package-document-cn
 ;;; Code:
 
 #+END_SRC
+** 内置包设置
+:PROPERTIES:
+:HEADER-ARGS: :tangle init.el
+:END:
 
-** package.el setting
+=init.el= 是 Emacs 的主要配置文件。这部分不需要外部插件， windows 中不使用插件。
+
+*** package.el setting
 :PROPERTIES:
 :HEADER-ARGS: :tangle (if (eq system-type 'windows-nt) "no" "init.el")
 :END:
@@ -161,9 +171,9 @@ https://github.com/zhangjie2012/use-package-document-cn
     (package-vc-upgrade-all)
     )
 #+end_src
-** default config
 
 *** 核心编辑器行为
+
 #+begin_src emacs-lisp
   (use-package emacs
     :ensure nil  ;; emacs 是虚拟包，代表 Emacs C 层的全局设置
@@ -181,10 +191,10 @@ https://github.com/zhangjie2012/use-package-document-cn
     :config
     (setq read-process-output-max (* 4 1024 1024))  ;; 进程输出缓冲区增至 4MB，减少 LSP 子进程 read 调用
     )
-
 #+end_src
 
-***  手册页
+*** 手册页
+
  #+begin_src emacs-lisp
    (use-package man
      :ensure nil
@@ -193,6 +203,7 @@ https://github.com/zhangjie2012/use-package-document-cn
  #+end_src
 
 *** 差异比较
+
 #+begin_src emacs-lisp
   (use-package ediff
     :ensure nil
@@ -201,6 +212,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** 项目管理
+
  #+begin_src emacs-lisp
    (use-package project
      :ensure nil
@@ -209,6 +221,7 @@ https://github.com/zhangjie2012/use-package-document-cn
  #+end_src
 
 *** 代码可视化
+
 #+begin_src emacs-lisp
   (use-package whitespace
     :hook (prog-mode . whitespace-mode)   ;; prog-mode 下启用空白可视化
@@ -216,9 +229,15 @@ https://github.com/zhangjie2012/use-package-document-cn
     (whitespace-style '(face indentation tabs tab-mark))  ;; 高亮缩进空格与多余 tab，并给 tab 加 » 标记
     (whitespace-display-mappings
      '((tab-mark 9 [187 9] [92 9]))))
+
+  (use-package elisp-mode
+    :ensure nil
+    :custom
+    (elisp-fontify-semantically t))  ;; 按语义高亮 Elisp 函数与变量定义
 #+end_src
 
 *** 书签
+
  #+begin_src emacs-lisp
    (use-package bookmark
      :ensure nil
@@ -227,6 +246,7 @@ https://github.com/zhangjie2012/use-package-document-cn
  #+end_src
 
 *** 词典
+
 #+begin_src emacs-lisp
   (use-package dictionary
     :ensure nil
@@ -234,6 +254,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** 编辑体验
+
 #+begin_src emacs-lisp
   (use-package hl-line
     :ensure nil
@@ -266,6 +287,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** 补全与按键提示
+
    #+begin_src emacs-lisp
      (use-package completion-preview
        :ensure nil
@@ -282,6 +304,7 @@ https://github.com/zhangjie2012/use-package-document-cn
    #+end_src
 
 *** 滚动
+
 #+begin_src emacs-lisp
   (use-package pixel-scroll
     :ensure nil
@@ -291,6 +314,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** 文件操作
+
 #+begin_src emacs-lisp
   (use-package files
     :ensure nil
@@ -306,6 +330,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** 重复命令
+
 #+begin_src emacs-lisp
   (use-package repeat
     :ensure nil
@@ -507,8 +532,9 @@ https://github.com/zhangjie2012/use-package-document-cn
     (save-place-limit 400))  ;; 最多记住 400 个文件的位置
 #+end_src
 
-*** 字体
-**** linux 
+**** 字体
+
+***** linux
 :PROPERTIES:
 :HEADER-ARGS: :tangle (if (eq system-type 'gnu/linux) "init.el" "no")
 :END:
@@ -534,7 +560,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 #+end_src
 
-**** mac
+***** mac
 :PROPERTIES:
 :HEADER-ARGS: :tangle (if (eq system-type 'darwin) "init.el" "no")
 :END:
@@ -558,9 +584,8 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 #+end_src
 
-** org
+**** Org Mode
 
-*** Org Mode
 #+begin_src emacs-lisp
   (use-package org-capture
     :ensure nil
@@ -583,8 +608,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 #+end_src
 
-
-** Tree-sitter 语法解析引擎
+**** Tree-sitter 语法解析引擎
 
 #+begin_src emacs-lisp
   (use-package treesit
@@ -611,8 +635,12 @@ https://github.com/zhangjie2012/use-package-document-cn
     (go-ts-mode-indent-offset 4))  ;; Go 语言缩进 4 空格
 #+end_src
 
+** 三方插件
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'windows-nt) "no" "init.el")
+:END:
 
-* 输入法
+*** 输入法
 :PROPERTIES:
 :HEADER-ARGS: :tangle (if (eq system-type 'gnu/linux) "init.el" "no")
 :END:
@@ -623,12 +651,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     (default-input-method "rime"))
 #+end_src
 
-* 三方插件
-:PROPERTIES:
-:HEADER-ARGS: :tangle (if (eq system-type 'windows-nt) "no" "init.el")
-:END:
-
-** org 美化
+*** org 美化
 
 #+begin_src emacs-lisp
   (use-package org-modern
@@ -640,7 +663,8 @@ https://github.com/zhangjie2012/use-package-document-cn
 
 #+end_src
 
-** Elisp 开发
+*** Elisp 开发
+
 #+begin_src emacs-lisp
   (use-package aggressive-indent
     :ensure t
@@ -661,14 +685,7 @@ https://github.com/zhangjie2012/use-package-document-cn
     :init
     (ef-themes-take-over-modus-themes-mode 1)
     (modus-themes-load-theme 'ef-bio))  ;; 使用 ef-bio 主题
-
-  (use-package elisp-mode
-    :ensure nil
-    :custom
-    (elisp-fontify-semantically t))  ;; 按语义高亮 Elisp 函数与变量定义
 #+end_src
-
-** editor
 
 *** PDF 阅读
 :PROPERTIES:
@@ -691,6 +708,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** godot
+
 #+begin_src emacs-lisp
   (use-package gdscript-mode
     :vc (:url "git@github.com:godotengine/emacs-gdscript-mode.git"
@@ -721,6 +739,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** 多光标
+
 #+begin_src emacs-lisp
   (use-package multiple-cursors  ;; 批量编辑，同时操作多个光标位置的文本
     :ensure t
@@ -735,6 +754,7 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 *** 终端与 Shell 集成
+
 #+begin_src emacs-lisp
   (use-package ghostel
     :ensure t)  ;; Ghostty 终端与 Emacs 通过 D-Bus 通信，提供编辑等集成功能
@@ -749,7 +769,6 @@ https://github.com/zhangjie2012/use-package-document-cn
     :config
     (global-disable-mouse-mode))  ;; 全局禁用鼠标，纯键盘工作流且避免误触
 #+end_src
-
 
 *** RSS 阅读
 
@@ -774,7 +793,6 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 #+end_src
 
-
 *** 实用命令
 
 #+begin_src emacs-lisp
@@ -792,9 +810,8 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 #+end_src
 
-** programming
+*** programming
 
-*** LSP 语言服务
 #+begin_src emacs-lisp
   (use-package eglot  ;; Emacs 内置 LSP 客户端，比 LSP-mode 轻量，与 flymake/xref/eldoc 集成更好
     :ensure nil
@@ -853,6 +870,10 @@ https://github.com/zhangjie2012/use-package-document-cn
 #+end_src
 
 ** init.el 文件尾
+:PROPERTIES:
+:HEADER-ARGS: :tangle init.el
+:END:
+
 #+BEGIN_SRC emacs-lisp
 
 (provide 'init)
