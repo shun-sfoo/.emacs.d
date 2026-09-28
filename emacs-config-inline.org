@@ -584,9 +584,45 @@ https://github.com/zhangjie2012/use-package-document-cn
     )
 #+end_src
 
+
+***** windows
+:PROPERTIES:
+:HEADER-ARGS: :tangle (if (eq system-type 'windows-nt) "init.el" "no")
+:END:
+#+begin_src emacs-lisp
+  (use-package faces
+    :if (display-graphic-p)  ;; 仅图形界面设置字体
+    :ensure nil
+    :preface
+    (defun my/apply-font (&optional frame)
+      (with-selected-frame (or frame (selected-frame))
+        (progn  ;; macOS: Inconsolata 等宽 + PingFang SC 显示中文
+          (set-face-attribute 'default nil :family "Consolas" :height 130 :weight 'regular)
+          (set-fontset-font t 'han (font-spec :family "Microsoft YaHei"))
+          (dolist (charset '(unicode symbol))  ;; Nerd Font 兜底图标/符号
+            (set-fontset-font t charset
+                              (font-spec :family "Symbols Nerd Font")
+                              nil 'append))
+          )))
+    :config
+    (my/apply-font (selected-frame))
+    )
+#+end_src
+
 **** Org Mode
 
 #+begin_src emacs-lisp
+  (use-package org
+    :ensure nil
+    :custom
+    (org-confirm-babel-evaluate nil)
+    (org-babel-load-languages '(
+                                (emacs-lisp . t)
+                                (python . t)
+                                ))
+    )
+
+
   (use-package org-capture
     :ensure nil
     :bind  (("C-c c" . org-capture))  ;; C-c c 快速捕获想法
